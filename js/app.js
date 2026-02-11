@@ -10,6 +10,7 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVGz648wKO49KZ98ML9
 let puntoEncontrado = null;
 let listaPuntos = [];
 let filaEncontrada = null;
+let categoriaActual = null;
 
 // ===========================================
 // Inicialización
@@ -180,6 +181,7 @@ async function buscarPunto() {
     if (resultado.exito) {
       puntoEncontrado = resultado.datos;
       filaEncontrada = resultado.fila;
+      categoriaActual = resultado.datos.categoria ? String(resultado.datos.categoria).trim().toUpperCase() : null;
 
       // Mostrar información del punto
       mostrarInfoPunto(resultado);
@@ -189,6 +191,9 @@ async function buscarPunto() {
 
       // Mostrar las secciones del formulario
       mostrarSecciones();
+
+      // Aplicar filtro segun la categoria del punto
+      aplicarFiltroCategoria();
 
       // Actualizar barra de progreso
       actualizarProgreso();
@@ -466,6 +471,25 @@ function llenarCampos(datos) {
 /**
  * Muestra las secciones del formulario después de encontrar el punto
  */
+/**
+ * Aplica el filtro segun la categoria del punto
+ * Si la categoria es CM, solo muestra mantenimiento de equipos
+ */
+function aplicarFiltroCategoria() {
+  const seccionSeguridad = document.getElementById('seccionSeguridad');
+  const seccionDirectv = document.getElementById('seccionDirectv');
+
+  if (categoriaActual === 'CM') {
+    // Categoria CM: solo mantenimiento, ocultar seguridad y DIRECTV
+    if (seccionSeguridad) seccionSeguridad.style.display = 'none';
+    if (seccionDirectv) seccionDirectv.style.display = 'none';
+  } else {
+    // Otras categorias: mostrar todo
+    if (seccionSeguridad) seccionSeguridad.style.display = '';
+    if (seccionDirectv) seccionDirectv.style.display = '';
+  }
+}
+
 function mostrarSecciones() {
   const secciones = document.getElementById('formularioSecciones');
   if (secciones) {
@@ -607,6 +631,13 @@ function limpiarFormulario() {
   // Resetear variables
   puntoEncontrado = null;
   filaEncontrada = null;
+  categoriaActual = null;
+
+  // Restaurar visibilidad de secciones
+  const seccionSeguridad = document.getElementById('seccionSeguridad');
+  const seccionDirectv = document.getElementById('seccionDirectv');
+  if (seccionSeguridad) seccionSeguridad.style.display = '';
+  if (seccionDirectv) seccionDirectv.style.display = '';
 
   // Limpiar campo de búsqueda
   document.getElementById('codigoPunto').value = '';

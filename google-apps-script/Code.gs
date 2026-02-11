@@ -93,6 +93,7 @@ function buscarPunto(codigo) {
         datos: {
           codigoPunto: datosFila[1],   // B
           nombrePunto: datosFila[2],    // C - nombre del punto si existe
+          categoria: datosFila[3],      // D - categoria del punto (CM, etc)
           cantEquipos: datosFila[4],    // E
           actualizacion: datosFila[5],  // F
           versionEquipo: datosFila[6],  // G
