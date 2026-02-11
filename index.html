@@ -38,16 +38,36 @@
         <span id="textoNotificacionError"></span>
     </div>
 
-    <!-- Encabezado tipo Google Forms -->
-    <header class="encabezado-principal">
-        <h1 class="encabezado-titulo">Formulario de mantenimiento completo</h1>
-        <p class="encabezado-subtitulo">Registro de equipos, seguridad y servicios por punto de servicio</p>
-        <p class="encabezado-requerido">* Indica que la pregunta es obligatoria</p>
-    </header>
-
     <!-- Contenido Principal -->
     <main class="contenedor-formulario">
+
+        <!-- Encabezado tipo Google Forms -->
+        <header class="encabezado-principal">
+            <h1 class="encabezado-titulo">Formulario de mantenimiento completo</h1>
+            <p class="encabezado-subtitulo">Registro de equipos, seguridad y servicios por punto de servicio</p>
+            <p class="encabezado-requerido">* Indica que la pregunta es obligatoria</p>
+        </header>
+
         <form id="formularioInventario" autocomplete="off">
+
+            <!-- SECCION: TECNICO -->
+            <section class="seccion-tarjeta seccion-activa">
+                <div class="campo-grupo">
+                    <label for="tecnico" class="form-label">
+                        Nombre del Técnico <span style="color: var(--color-error);">*</span>
+                    </label>
+                    <select class="form-select" id="tecnico" required>
+                        <option value="">Seleccionar técnico</option>
+                        <option value="JOHN BARRAGAN">JOHN BARRAGAN</option>
+                        <option value="RUBEN RAPALINO">RUBEN RAPALINO</option>
+                        <option value="DANIEL ENRIQUE ACOSTA BOLAÑO">DANIEL ENRIQUE ACOSTA BOLAÑO</option>
+                        <option value="JIMMY CASTELLANOS MADRID">JIMMY CASTELLANOS MADRID</option>
+                        <option value="ANDRES JUAN COBO OSPINO">ANDRES JUAN COBO OSPINO</option>
+                        <option value="GUSTAVO ADOLFO MEJIA MISATH">GUSTAVO ADOLFO MEJIA MISATH</option>
+                        <option value="LUIS ALBERTO BARRAZA RODRIGUEZ">LUIS ALBERTO BARRAZA RODRIGUEZ</option>
+                    </select>
+                </div>
+            </section>
 
             <!-- SECCION: BUSQUEDA DE PUNTO -->
             <section class="seccion-tarjeta seccion-activa">
@@ -170,60 +190,70 @@
                             </select>
                         </div>
 
-                        <div class="campo-grupo" id="grupoSerialControl" style="display: none;">
-                            <label for="serialControl" class="form-label">Serial Control</label>
-                            <input type="text" class="form-control" id="serialControl" placeholder="Ingrese serial">
+                    </div>
+
+                    <!-- Campos dependientes de Alarmas (se muestran cuando alarmas = SI) -->
+                    <div id="grupoAlarmas" style="display: none;">
+
+                        <div class="grilla-campos" style="margin-top: 1rem;">
+                            <div class="campo-grupo">
+                                <label for="serialControl" class="form-label">Serial Control</label>
+                                <input type="text" class="form-control" id="serialControl" placeholder="Ingrese serial">
+                            </div>
+                        </div>
+
+                        <hr class="separador">
+
+                        <!-- Visitas y detalles -->
+                        <p class="subseccion-titulo">Visitas y Detalles</p>
+
+                        <div class="grilla-campos">
+                            <div class="campo-grupo">
+                                <label for="visita1" class="form-label">Visita 1er Semestre</label>
+                                <input type="date" class="form-control" id="visita1">
+                            </div>
+
+                            <div class="campo-grupo">
+                                <label for="visita2" class="form-label">Visita 2do Semestre</label>
+                                <input type="date" class="form-control" id="visita2">
+                            </div>
+
+                            <div class="campo-grupo">
+                                <label for="horaSincronizada" class="form-label">
+                                    Hora Sincronizada <span
+                                        style="color: var(--texto-deshabilitado); font-weight: 400; text-transform: none;">(automatica)</span>
+                                </label>
+                                <input type="text" class="form-control" id="horaSincronizada" readonly>
+                            </div>
+
+                            <div class="campo-grupo">
+                                <label for="diasGrabacion" class="form-label">Dias de Grabacion</label>
+                                <input type="number" class="form-control" id="diasGrabacion" placeholder="0" min="0">
+                            </div>
+
+                            <div class="campo-grupo">
+                                <label for="numLinea" class="form-label">Num # Linea</label>
+                                <input type="text" class="form-control" id="numLinea" placeholder="Numero de linea">
+                            </div>
+
+                            <div class="campo-grupo">
+                                <label for="iccid" class="form-label">ICCID</label>
+                                <input type="text" class="form-control" id="iccid" placeholder="ICCID del SIM">
+                            </div>
+
+                            <div class="campo-grupo">
+                                <label for="estado" class="form-label">Estado</label>
+                                <select class="form-select" id="estado">
+                                    <option value="">Seleccionar</option>
+                                    <option value="ACTIVA">Activa</option>
+                                    <option value="INACTIVA">Inactiva</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
-                    <hr class="separador">
-
-                    <!-- Visitas y detalles -->
-                    <p class="subseccion-titulo">Visitas y Detalles</p>
-
-                    <div class="grilla-campos">
-                        <div class="campo-grupo">
-                            <label for="visita1" class="form-label">Visita 1er Semestre</label>
-                            <input type="date" class="form-control" id="visita1">
-                        </div>
-
-                        <div class="campo-grupo">
-                            <label for="visita2" class="form-label">Visita 2do Semestre</label>
-                            <input type="date" class="form-control" id="visita2">
-                        </div>
-
-                        <div class="campo-grupo">
-                            <label for="horaSincronizada" class="form-label">
-                                Hora Sincronizada <span
-                                    style="color: var(--texto-deshabilitado); font-weight: 400; text-transform: none;">(automatica)</span>
-                            </label>
-                            <input type="text" class="form-control" id="horaSincronizada" readonly>
-                        </div>
-
-                        <div class="campo-grupo">
-                            <label for="diasGrabacion" class="form-label">Dias de Grabacion</label>
-                            <input type="number" class="form-control" id="diasGrabacion" placeholder="0" min="0">
-                        </div>
-
-                        <div class="campo-grupo">
-                            <label for="numLinea" class="form-label">Num # Linea</label>
-                            <input type="text" class="form-control" id="numLinea" placeholder="Numero de linea">
-                        </div>
-
-                        <div class="campo-grupo">
-                            <label for="iccid" class="form-label">ICCID</label>
-                            <input type="text" class="form-control" id="iccid" placeholder="ICCID del SIM">
-                        </div>
-
-                        <div class="campo-grupo">
-                            <label for="estado" class="form-label">Estado</label>
-                            <select class="form-select" id="estado">
-                                <option value="">Seleccionar</option>
-                                <option value="ACTIVA">Activa</option>
-                                <option value="INACTIVA">Inactiva</option>
-                            </select>
-                        </div>
-
+                    <!-- Observaciones siempre visibles en esta seccion -->
+                    <div class="grilla-campos" style="margin-top: 1rem;">
                         <div class="campo-grupo campo-completo">
                             <label for="observaciones" class="form-label">Observaciones</label>
                             <textarea class="form-control" id="observaciones" rows="3"
@@ -288,10 +318,6 @@
     <!-- Footer -->
     <footer class="pie-pagina">
         <span>Formulario de Inventario</span>
-        <a href="https://docs.google.com/spreadsheets/d/19liMdG9cbgL0dZvUkb2Ri77NCOO-BmAwBF_QWTLdDA8/edit"
-            target="_blank" rel="noopener">
-            Ver hoja de calculo
-        </a>
     </footer>
 
     <!-- Bootstrap 5 JS -->

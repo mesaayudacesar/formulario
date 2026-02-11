@@ -51,8 +51,7 @@ body {
     border-top: 10px solid var(--color-primario);
     border-radius: var(--borde-radius);
     box-shadow: var(--sombra-tarjeta);
-    max-width: 640px;
-    margin: 1.5rem auto 0.75rem;
+    margin-bottom: 0.75rem;
     padding: 1.5rem 1.75rem;
 }
 
@@ -82,7 +81,7 @@ body {
 .contenedor-formulario {
     max-width: 640px;
     margin: 0 auto;
-    padding: 0 1rem 3rem;
+    padding: 1.5rem 1rem 3rem;
 }
 
 /* -- Tarjetas / Secciones -- */
@@ -581,7 +580,6 @@ textarea.form-control {
 /* -- Responsive -- */
 @media (max-width: 680px) {
 
-    .encabezado-principal,
     .contenedor-formulario {
         margin-left: 0.75rem;
         margin-right: 0.75rem;

@@ -4,7 +4,7 @@
 
 // URL del Google Apps Script desplegado como Web App
 // IMPORTANTE: Reemplazar con la URL real después de desplegar el script
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVGz648wKO49KZ98ML9_azjNtuMki68ZLu7yE9Q2yr7koc7HCx8qeX4R6Q-g2TEh2Q4A/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyAERSrOM4Qzh2zQn0V64xLyT0nbpd2W3DdRcLHWycjTENdkhdeE71CxB8rHu0HpO6d/exec';
 
 // Variables globales
 let puntoEncontrado = null;
@@ -137,13 +137,13 @@ function configurarCamposCondicionales() {
     });
   }
 
-  // Alarmas -> Serial Control
+  // Alarmas -> Grupo completo de alarmas (Serial Control + Visitas + Detalles)
   const selectAlarmas = document.getElementById('alarmas');
   if (selectAlarmas) {
     selectAlarmas.addEventListener('change', () => {
-      const grupoSerialControl = document.getElementById('grupoSerialControl');
-      if (grupoSerialControl) {
-        grupoSerialControl.style.display = selectAlarmas.value === 'SI' ? 'block' : 'none';
+      const grupoAlarmas = document.getElementById('grupoAlarmas');
+      if (grupoAlarmas) {
+        grupoAlarmas.style.display = selectAlarmas.value === 'SI' ? 'block' : 'none';
       }
     });
   }
@@ -181,7 +181,26 @@ async function buscarPunto() {
     if (resultado.exito) {
       puntoEncontrado = resultado.datos;
       filaEncontrada = resultado.fila;
-      categoriaActual = resultado.datos.categoria ? String(resultado.datos.categoria).trim().toUpperCase() : null;
+
+      // Depurar valor de categoria recibido
+      console.log('=== DEPURACION CATEGORIA ===');
+      console.log('Claves recibidas:', Object.keys(resultado.datos));
+      console.log('Tiene propiedad categoria?', 'categoria' in resultado.datos);
+      console.log('Datos completos del punto:', JSON.stringify(resultado.datos, null, 2));
+      console.log('Valor crudo de categoria:', resultado.datos.categoria);
+      console.log('Tipo de categoria:', typeof resultado.datos.categoria);
+      console.log('Valor de nombrePunto (columna C):', resultado.datos.nombrePunto);
+      console.log('Valor de cantEquipos (columna E):', resultado.datos.cantEquipos);
+
+      // Asignar categoria (manejar valores falsy como 0 o cadena vacia)
+      const catRaw = resultado.datos.categoria;
+      if (catRaw !== null && catRaw !== undefined && catRaw !== '') {
+        categoriaActual = String(catRaw).trim().toUpperCase();
+      } else {
+        categoriaActual = null;
+      }
+      console.log('Categoria procesada:', categoriaActual);
+      console.log('=== FIN DEPURACION ===');
 
       // Mostrar información del punto
       mostrarInfoPunto(resultado);
@@ -330,6 +349,7 @@ async function enviarDatos() {
  */
 function recopilarDatos() {
   return {
+    tecnico: document.getElementById('tecnico').value,
     codigo: document.getElementById('codigoPunto').value.trim(),
     cantEquipos: document.getElementById('cantEquipos').value,
     actualizacion: document.getElementById('actualizacion').value,
@@ -428,7 +448,7 @@ function llenarCampos(datos) {
     const valAlarmas = String(datos.alarmas).toUpperCase();
     if (valAlarmas === 'SI' || valAlarmas === 'SÍ') {
       document.getElementById('alarmas').value = 'SI';
-      document.getElementById('grupoSerialControl').style.display = 'block';
+      document.getElementById('grupoAlarmas').style.display = 'block';
     } else if (valAlarmas === 'NO') {
       document.getElementById('alarmas').value = 'NO';
     }
@@ -660,7 +680,7 @@ function limpiarFormulario() {
   });
 
   // Resetear selects
-  const selects = ['actualizacion', 'camaras', 'alarmas', 'estado', 'directv'];
+  const selects = ['tecnico', 'actualizacion', 'camaras', 'alarmas', 'estado', 'directv'];
   selects.forEach(id => {
     const campo = document.getElementById(id);
     if (campo) campo.value = '';
@@ -670,7 +690,7 @@ function limpiarFormulario() {
   document.getElementById('versionEquipo').checked = false;
 
   // Ocultar campos condicionales
-  const camposCondicionales = ['grupoCantCamaras', 'grupoSerialControl', 'camposDirectv'];
+  const camposCondicionales = ['grupoCantCamaras', 'grupoAlarmas', 'camposDirectv'];
   camposCondicionales.forEach(id => {
     const campo = document.getElementById(id);
     if (campo) campo.style.display = 'none';
