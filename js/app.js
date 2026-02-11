@@ -4,7 +4,7 @@
 
 // URL del Google Apps Script desplegado como Web App
 // IMPORTANTE: Reemplazar con la URL real después de desplegar el script
-const SCRIPT_URL = 'TU_URL_DE_GOOGLE_APPS_SCRIPT_AQUI';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVGz648wKO49KZ98ML9_azjNtuMki68ZLu7yE9Q2yr7koc7HCx8qeX4R6Q-g2TEh2Q4A/exec';
 
 // Variables globales
 let puntoEncontrado = null;
