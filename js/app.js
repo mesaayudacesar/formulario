@@ -24,16 +24,16 @@ document.addEventListener('DOMContentLoaded', () => {
 function inicializar() {
   // Establecer hora actual en el campo de hora sincronizada
   actualizarHoraActual();
-  
+
   // Actualizar hora cada minuto
   setInterval(actualizarHoraActual, 60000);
-  
+
   // Configurar eventos del formulario
   configurarEventos();
-  
+
   // Cargar lista de puntos para autocompletado
   cargarListaPuntos();
-  
+
   // Configurar la visibilidad condicional de campos
   configurarCamposCondicionales();
 }
@@ -390,7 +390,7 @@ function mostrarError(mensaje) {
 function llenarCampos(datos) {
   // Mantenimiento Equipos
   if (datos.cantEquipos) document.getElementById('cantEquipos').value = datos.cantEquipos;
-  
+
   if (datos.actualizacion) {
     const valActualizacion = String(datos.actualizacion).toUpperCase();
     if (valActualizacion === 'SI' || valActualizacion === 'SÍ') {
@@ -399,7 +399,7 @@ function llenarCampos(datos) {
       document.getElementById('actualizacion').value = 'NO';
     }
   }
-  
+
   if (datos.versionEquipo) {
     const version = String(datos.versionEquipo).trim();
     document.getElementById('versionEquipo').checked = version === '2.0.44' || version.includes('2.0.44');
@@ -415,7 +415,7 @@ function llenarCampos(datos) {
       document.getElementById('camaras').value = 'NO';
     }
   }
-  
+
   if (datos.cantCamaras) document.getElementById('cantCamaras').value = datos.cantCamaras;
 
   // Seguridad - Alarmas
@@ -428,7 +428,7 @@ function llenarCampos(datos) {
       document.getElementById('alarmas').value = 'NO';
     }
   }
-  
+
   if (datos.serialControl) document.getElementById('serialControl').value = datos.serialControl;
   if (datos.visita1) document.getElementById('visita1').value = datos.visita1;
   if (datos.visita2) document.getElementById('visita2').value = datos.visita2;
@@ -457,7 +457,7 @@ function llenarCampos(datos) {
       document.getElementById('directv').value = 'NO';
     }
   }
-  
+
   if (datos.cantDeco) document.getElementById('cantDeco').value = datos.cantDeco;
   if (datos.serialDeco) document.getElementById('serialDeco').value = datos.serialDeco;
   if (datos.serialTarjeta) document.getElementById('serialTarjeta').value = datos.serialTarjeta;
@@ -476,6 +476,12 @@ function mostrarSecciones() {
   if (barraProgreso) {
     barraProgreso.classList.add('visible');
   }
+
+  // Mostrar botones de accion
+  const botones = document.getElementById('botonesAccion');
+  if (botones) {
+    botones.style.display = 'flex';
+  }
 }
 
 /**
@@ -490,6 +496,12 @@ function ocultarSecciones() {
   const barraProgreso = document.getElementById('barraProgresoContainer');
   if (barraProgreso) {
     barraProgreso.classList.remove('visible');
+  }
+
+  // Ocultar botones de accion
+  const botones = document.getElementById('botonesAccion');
+  if (botones) {
+    botones.style.display = 'none';
   }
 }
 
@@ -607,10 +619,10 @@ function limpiarFormulario() {
   if (errorDiv) errorDiv.classList.remove('visible');
 
   // Limpiar todos los campos
-  const camposTexto = ['cantEquipos', 'cantCamaras', 'serialControl', 
-    'visita1', 'visita2', 'observaciones', 'diasGrabacion', 
+  const camposTexto = ['cantEquipos', 'cantCamaras', 'serialControl',
+    'visita1', 'visita2', 'observaciones', 'diasGrabacion',
     'numLinea', 'iccid', 'cantDeco', 'serialDeco', 'serialTarjeta'];
-  
+
   camposTexto.forEach(id => {
     const campo = document.getElementById(id);
     if (campo) campo.value = '';

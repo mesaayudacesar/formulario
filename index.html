@@ -1,419 +1,305 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Formulario de inventario para registro de equipos, cámaras, alarmas y DIRECTV en puntos de servicio">
-  <title>Formulario de Inventario - Puntos de Servicio</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Formulario de inventario para registro de equipos, camaras, alarmas y DIRECTV en puntos de servicio">
+    <title>Formulario de Inventario</title>
 
-  <!-- Bootstrap 5 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  
-  <!-- Bootstrap Icons -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <!-- Estilos personalizados -->
-  <link rel="stylesheet" href="css/styles.css">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="css/styles.css">
 </head>
+
 <body>
 
-  <!-- Overlay de carga -->
-  <div id="overlayCarga" class="overlay-carga">
-    <div class="overlay-contenido">
-      <div class="overlay-spinner"></div>
-      <p id="textoCarga" class="overlay-texto">Procesando...</p>
+    <!-- Overlay de carga -->
+    <div id="overlayCarga" class="overlay-carga">
+        <div class="overlay-contenido">
+            <div class="overlay-spinner"></div>
+            <p id="textoCarga" class="overlay-texto">Procesando...</p>
+        </div>
     </div>
-  </div>
 
-  <!-- Notificación de éxito -->
-  <div id="notificacionExito" class="mensaje-exito-global">
-    <i class="bi bi-check-circle-fill" style="font-size: 1.3rem;"></i>
-    <span id="textoNotificacionExito"></span>
-  </div>
-
-  <!-- Notificación de error -->
-  <div id="notificacionError" class="mensaje-error-global">
-    <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.3rem;"></i>
-    <span id="textoNotificacionError"></span>
-  </div>
-
-  <!-- Encabezado -->
-  <header class="encabezado-principal">
-    <div class="container">
-      <div class="d-flex align-items-center">
-        <div class="icono-encabezado">
-          <i class="bi bi-clipboard-data"></i>
-        </div>
-        <div>
-          <h1 class="encabezado-titulo">Formulario de Inventario</h1>
-          <p class="encabezado-subtitulo">Registro de equipos, seguridad y servicios por punto</p>
-        </div>
-      </div>
+    <!-- Notificacion de exito -->
+    <div id="notificacionExito" class="notificacion-global notificacion-exito">
+        <span id="textoNotificacionExito"></span>
     </div>
-  </header>
 
-  <!-- Contenido Principal -->
-  <main class="contenedor-formulario">
-    <form id="formularioInventario" autocomplete="off">
-
-      <!-- ===== SECCION: BUSQUEDA DE PUNTO ===== -->
-      <section class="seccion-tarjeta seccion-busqueda">
-        <h2 class="seccion-titulo">
-          <span class="icono"><i class="bi bi-search"></i></span>
-          Buscar Punto
-        </h2>
-        
-        <div class="mb-3">
-          <label for="codigoPunto" class="form-label">Código del Punto</label>
-          <div class="grupo-busqueda" style="position: relative;">
-            <input 
-              type="text" 
-              class="form-control" 
-              id="codigoPunto" 
-              placeholder="Ingrese el código del punto..."
-              autocomplete="off"
-            >
-            <!-- Lista de autocompletado -->
-            <div id="listaAutocompletado" class="lista-autocompletado"></div>
-          </div>
-        </div>
-
-        <button type="button" class="btn-primario btn-buscar" id="btnBuscar">
-          <i class="bi bi-search"></i>
-          Buscar Punto
-        </button>
-
-        <!-- Info del punto encontrado -->
-        <div id="infoPunto" class="info-punto">
-          <div class="icono-check">
-            <i class="bi bi-check-lg"></i>
-          </div>
-          <div>
-            <div id="nombrePuntoTexto" class="nombre-punto"></div>
-            <div id="filaPuntoTexto" class="fila-punto"></div>
-          </div>
-        </div>
-
-        <!-- Mensaje de error -->
-        <div id="mensajeError" class="mensaje-error">
-          <i class="bi bi-exclamation-circle-fill" style="font-size: 1.2rem; flex-shrink: 0;"></i>
-          <span id="textoError"></span>
-        </div>
-      </section>
-
-      <!-- ===== BARRA DE PROGRESO ===== -->
-      <div id="barraProgresoContainer" class="barra-progreso-container">
-        <div class="progreso-texto">
-          <span>Progreso del formulario</span>
-          <span id="progresoTexto">0 de 8 campos principales</span>
-        </div>
-        <div class="barra-progreso">
-          <div id="barraProgresoFill" class="barra-progreso-fill"></div>
-        </div>
-      </div>
-
-      <!-- ===== SECCIONES DEL FORMULARIO ===== -->
-      <div id="formularioSecciones" class="formulario-secciones">
-
-        <!-- ===== SECCION: MANTENIMIENTO EQUIPOS (PC) ===== -->
-        <section class="seccion-tarjeta seccion-equipos">
-          <h2 class="seccion-titulo">
-            <span class="icono"><i class="bi bi-pc-display"></i></span>
-            Mantenimiento Equipos (PC)
-          </h2>
-
-          <div class="grilla-campos">
-            <!-- Cantidad de equipos -->
-            <div>
-              <label for="cantEquipos" class="form-label">Cant. Equipos</label>
-              <input 
-                type="number" 
-                class="form-control" 
-                id="cantEquipos" 
-                placeholder="0"
-                min="0"
-              >
-            </div>
-
-            <!-- Actualización -->
-            <div>
-              <label for="actualizacion" class="form-label">Actualización</label>
-              <select class="form-select" id="actualizacion">
-                <option value="">Seleccionar...</option>
-                <option value="SI">Si</option>
-                <option value="NO">No</option>
-              </select>
-            </div>
-
-            <!-- Versión Equipo -->
-            <div class="d-flex align-items-end">
-              <div class="form-check" style="padding-bottom: 0.5rem;">
-                <input class="form-check-input" type="checkbox" id="versionEquipo">
-                <label class="form-check-label" for="versionEquipo">
-                  Versión 2.0.44
-                </label>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- ===== SECCION: SEGURIDAD CAMARAS & ALARMAS ===== -->
-        <section class="seccion-tarjeta seccion-seguridad">
-          <h2 class="seccion-titulo">
-            <span class="icono"><i class="bi bi-shield-lock"></i></span>
-            Seguridad - Cámaras & Alarmas (CCTV)
-          </h2>
-
-          <!-- Subsección: Cámaras -->
-          <h6 class="text-uppercase mb-3" style="color: var(--texto-terciario); font-size: 0.75rem; letter-spacing: 1px;">
-            <i class="bi bi-camera-video me-1"></i> Cámaras
-          </h6>
-          
-          <div class="grilla-campos mb-4">
-            <!-- Tiene cámaras -->
-            <div>
-              <label for="camaras" class="form-label">Cámaras</label>
-              <select class="form-select" id="camaras">
-                <option value="">Seleccionar...</option>
-                <option value="SI">Si</option>
-                <option value="NO">No</option>
-              </select>
-            </div>
-
-            <!-- Cantidad de cámaras (condicional) -->
-            <div id="grupoCantCamaras" style="display: none;">
-              <label for="cantCamaras" class="form-label">Cantidad de Cámaras</label>
-              <input 
-                type="number" 
-                class="form-control" 
-                id="cantCamaras" 
-                placeholder="0"
-                min="0"
-              >
-            </div>
-          </div>
-
-          <div class="separador"></div>
-
-          <!-- Subsección: Alarmas -->
-          <h6 class="text-uppercase mb-3" style="color: var(--texto-terciario); font-size: 0.75rem; letter-spacing: 1px;">
-            <i class="bi bi-bell me-1"></i> Alarmas
-          </h6>
-
-          <div class="grilla-campos mb-4">
-            <!-- Tiene alarmas -->
-            <div>
-              <label for="alarmas" class="form-label">Alarmas</label>
-              <select class="form-select" id="alarmas">
-                <option value="">Seleccionar...</option>
-                <option value="SI">Si</option>
-                <option value="NO">No</option>
-              </select>
-            </div>
-
-            <!-- Serial Control (condicional) -->
-            <div id="grupoSerialControl" style="display: none;">
-              <label for="serialControl" class="form-label">Serial Control</label>
-              <input 
-                type="text" 
-                class="form-control" 
-                id="serialControl" 
-                placeholder="Ingrese serial..."
-              >
-            </div>
-          </div>
-
-          <div class="separador"></div>
-
-          <!-- Subsección: Visitas y otros -->
-          <h6 class="text-uppercase mb-3" style="color: var(--texto-terciario); font-size: 0.75rem; letter-spacing: 1px;">
-            <i class="bi bi-calendar-check me-1"></i> Visitas y Detalles
-          </h6>
-
-          <div class="grilla-campos">
-            <!-- Visita 1 Semestre -->
-            <div>
-              <label for="visita1" class="form-label">Visita 1er Semestre</label>
-              <input 
-                type="date" 
-                class="form-control" 
-                id="visita1"
-              >
-            </div>
-
-            <!-- Visita 2 Semestre -->
-            <div>
-              <label for="visita2" class="form-label">Visita 2do Semestre</label>
-              <input 
-                type="date" 
-                class="form-control" 
-                id="visita2"
-              >
-            </div>
-
-            <!-- Hora Sincronizada (automática) -->
-            <div>
-              <label for="horaSincronizada" class="form-label">
-                Hora Sincronizada
-                <small style="color: var(--texto-terciario); text-transform: none;">(automática)</small>
-              </label>
-              <input 
-                type="text" 
-                class="form-control" 
-                id="horaSincronizada" 
-                readonly
-                style="background: rgba(99, 102, 241, 0.05); cursor: default;"
-              >
-            </div>
-
-            <!-- Días de grabación -->
-            <div>
-              <label for="diasGrabacion" class="form-label">Días de Grabación</label>
-              <input 
-                type="number" 
-                class="form-control" 
-                id="diasGrabacion" 
-                placeholder="0"
-                min="0"
-              >
-            </div>
-
-            <!-- Num # Línea -->
-            <div>
-              <label for="numLinea" class="form-label">Num # Línea</label>
-              <input 
-                type="text" 
-                class="form-control" 
-                id="numLinea" 
-                placeholder="Número de línea..."
-              >
-            </div>
-
-            <!-- ICCID -->
-            <div>
-              <label for="iccid" class="form-label">ICCID</label>
-              <input 
-                type="text" 
-                class="form-control" 
-                id="iccid" 
-                placeholder="ICCID del SIM..."
-              >
-            </div>
-
-            <!-- Estado -->
-            <div>
-              <label for="estado" class="form-label">Estado</label>
-              <select class="form-select" id="estado">
-                <option value="">Seleccionar...</option>
-                <option value="ACTIVA">Activa</option>
-                <option value="INACTIVA">Inactiva</option>
-              </select>
-            </div>
-
-            <!-- Observaciones -->
-            <div class="campo-completo">
-              <label for="observaciones" class="form-label">Observaciones</label>
-              <textarea 
-                class="form-control" 
-                id="observaciones" 
-                rows="3" 
-                placeholder="Escriba aquí las observaciones..."
-                style="resize: vertical;"
-              ></textarea>
-            </div>
-          </div>
-        </section>
-
-        <!-- ===== SECCION: DIRECTV ===== -->
-        <section class="seccion-tarjeta seccion-directv">
-          <h2 class="seccion-titulo">
-            <span class="icono"><i class="bi bi-tv"></i></span>
-            DIRECTV
-          </h2>
-
-          <div class="grilla-campos">
-            <!-- Tiene DIRECTV -->
-            <div>
-              <label for="directv" class="form-label">DIRECTV</label>
-              <select class="form-select" id="directv">
-                <option value="">Seleccionar...</option>
-                <option value="SI">Si</option>
-                <option value="NO">No</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Campos condicionales de DIRECTV -->
-          <div id="camposDirectv" style="display: none; margin-top: 1.25rem;">
-            <div class="grilla-campos">
-              <!-- Cantidad de Decos -->
-              <div>
-                <label for="cantDeco" class="form-label">Cant. Decodificadores</label>
-                <input 
-                  type="number" 
-                  class="form-control" 
-                  id="cantDeco" 
-                  placeholder="0"
-                  min="0"
-                >
-              </div>
-
-              <!-- Serial Deco -->
-              <div>
-                <label for="serialDeco" class="form-label">Serial Decodificador</label>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  id="serialDeco" 
-                  placeholder="Serial del deco..."
-                >
-              </div>
-
-              <!-- Serial Tarjeta -->
-              <div>
-                <label for="serialTarjeta" class="form-label">Serial Tarjeta</label>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  id="serialTarjeta" 
-                  placeholder="Serial de la tarjeta..."
-                >
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- ===== BOTONES DE ACCIÓN ===== -->
-        <section class="seccion-tarjeta" style="background: transparent; border: none; box-shadow: none; padding: 0;">
-          <div class="d-flex flex-column flex-sm-row gap-3">
-            <button type="button" class="btn-primario btn-enviar" id="btnEnviar">
-              <i class="bi bi-send-fill"></i>
-              Enviar Datos
-              <div id="spinnerEnviar" class="spinner-carga"></div>
-            </button>
-            <button type="button" class="btn-limpiar" id="btnLimpiar">
-              <i class="bi bi-arrow-counterclockwise"></i>
-              Limpiar
-            </button>
-          </div>
-        </section>
-
-      </div>
-    </form>
-  </main>
-
-  <!-- Footer -->
-  <footer class="pie-pagina">
-    <div class="container">
-      <p>Formulario de Inventario &mdash; Conectado con Google Sheets</p>
+    <!-- Notificacion de error -->
+    <div id="notificacionError" class="notificacion-global notificacion-error">
+        <span id="textoNotificacionError"></span>
     </div>
-  </footer>
 
-  <!-- Bootstrap 5 JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Encabezado tipo Google Forms -->
+    <header class="encabezado-principal">
+        <h1 class="encabezado-titulo">Formulario de Inventario</h1>
+        <p class="encabezado-subtitulo">Registro de equipos, seguridad y servicios por punto de servicio</p>
+        <p class="encabezado-requerido">* Indica que la pregunta es obligatoria</p>
+    </header>
 
-  <!-- Lógica del formulario -->
-  <script src="js/app.js"></script>
+    <!-- Contenido Principal -->
+    <main class="contenedor-formulario">
+        <form id="formularioInventario" autocomplete="off">
+
+            <!-- SECCION: BUSQUEDA DE PUNTO -->
+            <section class="seccion-tarjeta seccion-activa">
+                <div class="campo-grupo">
+                    <label for="codigoPunto" class="form-label">
+                        Codigo del Punto <span style="color: var(--color-error);">*</span>
+                    </label>
+                    <div class="grupo-busqueda" style="position: relative;">
+                        <input type="text" class="form-control" id="codigoPunto"
+                            placeholder="Ingrese el codigo del punto" autocomplete="off">
+                        <div id="listaAutocompletado" class="lista-autocompletado"></div>
+                    </div>
+                </div>
+
+                <button type="button" class="btn-primario" id="btnBuscar">
+                    Buscar Punto
+                </button>
+
+                <!-- Info del punto encontrado -->
+                <div id="infoPunto" class="info-punto">
+                    <i class="bi bi-check-circle-fill icono-check"></i>
+                    <div>
+                        <div id="nombrePuntoTexto" class="nombre-punto"></div>
+                        <div id="filaPuntoTexto" class="fila-punto"></div>
+                    </div>
+                </div>
+
+                <!-- Mensaje de error -->
+                <div id="mensajeError" class="mensaje-error">
+                    <i class="bi bi-exclamation-circle-fill" style="flex-shrink: 0;"></i>
+                    <span id="textoError"></span>
+                </div>
+            </section>
+
+            <!-- BARRA DE PROGRESO -->
+            <div id="barraProgresoContainer" class="barra-progreso-container">
+                <div class="progreso-texto">
+                    <span>Progreso</span>
+                    <span id="progresoTexto">0 de 8 campos</span>
+                </div>
+                <div class="barra-progreso">
+                    <div id="barraProgresoFill" class="barra-progreso-fill"></div>
+                </div>
+            </div>
+
+            <!-- SECCIONES DEL FORMULARIO (ocultas hasta buscar punto) -->
+            <div id="formularioSecciones" class="formulario-secciones">
+
+                <!-- SECCION: MANTENIMIENTO EQUIPOS (PC) -->
+                <section class="seccion-tarjeta">
+                    <h2 class="seccion-titulo">
+                        <i class="bi bi-pc-display icono-seccion"></i>
+                        Mantenimiento Equipos (PC)
+                    </h2>
+
+                    <div class="grilla-campos">
+                        <div class="campo-grupo">
+                            <label for="cantEquipos" class="form-label">Cant. Equipos</label>
+                            <input type="number" class="form-control" id="cantEquipos" placeholder="0" min="0">
+                        </div>
+
+                        <div class="campo-grupo">
+                            <label for="actualizacion" class="form-label">Actualizacion</label>
+                            <select class="form-select" id="actualizacion">
+                                <option value="">Seleccionar</option>
+                                <option value="SI">Si</option>
+                                <option value="NO">No</option>
+                            </select>
+                        </div>
+
+                        <div class="campo-grupo" style="display: flex; align-items: flex-end;">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="versionEquipo">
+                                <label class="form-check-label" for="versionEquipo">
+                                    Version 2.0.44
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECCION: SEGURIDAD CAMARAS & ALARMAS -->
+                <section class="seccion-tarjeta">
+                    <h2 class="seccion-titulo">
+                        <i class="bi bi-shield-lock icono-seccion"></i>
+                        Seguridad - Camaras y Alarmas (CCTV)
+                    </h2>
+
+                    <!-- Camaras -->
+                    <p class="subseccion-titulo">Camaras</p>
+
+                    <div class="grilla-campos">
+                        <div class="campo-grupo">
+                            <label for="camaras" class="form-label">Camaras</label>
+                            <select class="form-select" id="camaras">
+                                <option value="">Seleccionar</option>
+                                <option value="SI">Si</option>
+                                <option value="NO">No</option>
+                            </select>
+                        </div>
+
+                        <div class="campo-grupo" id="grupoCantCamaras" style="display: none;">
+                            <label for="cantCamaras" class="form-label">Cantidad de Camaras</label>
+                            <input type="number" class="form-control" id="cantCamaras" placeholder="0" min="0">
+                        </div>
+                    </div>
+
+                    <hr class="separador">
+
+                    <!-- Alarmas -->
+                    <p class="subseccion-titulo">Alarmas</p>
+
+                    <div class="grilla-campos">
+                        <div class="campo-grupo">
+                            <label for="alarmas" class="form-label">Alarmas</label>
+                            <select class="form-select" id="alarmas">
+                                <option value="">Seleccionar</option>
+                                <option value="SI">Si</option>
+                                <option value="NO">No</option>
+                            </select>
+                        </div>
+
+                        <div class="campo-grupo" id="grupoSerialControl" style="display: none;">
+                            <label for="serialControl" class="form-label">Serial Control</label>
+                            <input type="text" class="form-control" id="serialControl" placeholder="Ingrese serial">
+                        </div>
+                    </div>
+
+                    <hr class="separador">
+
+                    <!-- Visitas y detalles -->
+                    <p class="subseccion-titulo">Visitas y Detalles</p>
+
+                    <div class="grilla-campos">
+                        <div class="campo-grupo">
+                            <label for="visita1" class="form-label">Visita 1er Semestre</label>
+                            <input type="date" class="form-control" id="visita1">
+                        </div>
+
+                        <div class="campo-grupo">
+                            <label for="visita2" class="form-label">Visita 2do Semestre</label>
+                            <input type="date" class="form-control" id="visita2">
+                        </div>
+
+                        <div class="campo-grupo">
+                            <label for="horaSincronizada" class="form-label">
+                                Hora Sincronizada <span
+                                    style="color: var(--texto-deshabilitado); font-weight: 400; text-transform: none;">(automatica)</span>
+                            </label>
+                            <input type="text" class="form-control" id="horaSincronizada" readonly>
+                        </div>
+
+                        <div class="campo-grupo">
+                            <label for="diasGrabacion" class="form-label">Dias de Grabacion</label>
+                            <input type="number" class="form-control" id="diasGrabacion" placeholder="0" min="0">
+                        </div>
+
+                        <div class="campo-grupo">
+                            <label for="numLinea" class="form-label">Num # Linea</label>
+                            <input type="text" class="form-control" id="numLinea" placeholder="Numero de linea">
+                        </div>
+
+                        <div class="campo-grupo">
+                            <label for="iccid" class="form-label">ICCID</label>
+                            <input type="text" class="form-control" id="iccid" placeholder="ICCID del SIM">
+                        </div>
+
+                        <div class="campo-grupo">
+                            <label for="estado" class="form-label">Estado</label>
+                            <select class="form-select" id="estado">
+                                <option value="">Seleccionar</option>
+                                <option value="ACTIVA">Activa</option>
+                                <option value="INACTIVA">Inactiva</option>
+                            </select>
+                        </div>
+
+                        <div class="campo-grupo campo-completo">
+                            <label for="observaciones" class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="observaciones" rows="3"
+                                placeholder="Escriba aqui las observaciones"></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECCION: DIRECTV -->
+                <section class="seccion-tarjeta">
+                    <h2 class="seccion-titulo">
+                        <i class="bi bi-tv icono-seccion"></i>
+                        DIRECTV
+                    </h2>
+
+                    <div class="campo-grupo">
+                        <label for="directv" class="form-label">DIRECTV</label>
+                        <select class="form-select" id="directv">
+                            <option value="">Seleccionar</option>
+                            <option value="SI">Si</option>
+                            <option value="NO">No</option>
+                        </select>
+                    </div>
+
+                    <div id="camposDirectv" style="display: none; margin-top: 1rem;">
+                        <div class="grilla-campos">
+                            <div class="campo-grupo">
+                                <label for="cantDeco" class="form-label">Cant. Decodificadores</label>
+                                <input type="number" class="form-control" id="cantDeco" placeholder="0" min="0">
+                            </div>
+
+                            <div class="campo-grupo">
+                                <label for="serialDeco" class="form-label">Serial Decodificador</label>
+                                <input type="text" class="form-control" id="serialDeco" placeholder="Serial del deco">
+                            </div>
+
+                            <div class="campo-grupo">
+                                <label for="serialTarjeta" class="form-label">Serial Tarjeta</label>
+                                <input type="text" class="form-control" id="serialTarjeta"
+                                    placeholder="Serial de la tarjeta">
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- BOTONES DE ACCION -->
+            <div id="botonesAccion" class="botones-accion" style="display: none;">
+                <button type="button" class="btn-primario btn-enviar" id="btnEnviar">
+                    Enviar
+                    <div id="spinnerEnviar" class="spinner-carga"></div>
+                </button>
+                <button type="button" class="btn-limpiar" id="btnLimpiar">
+                    Borrar formulario
+                </button>
+            </div>
+
+        </form>
+    </main>
+
+    <!-- Footer -->
+    <footer class="pie-pagina">
+        <span>Formulario de Inventario</span>
+        <a href="https://docs.google.com/spreadsheets/d/19liMdG9cbgL0dZvUkb2Ri77NCOO-BmAwBF_QWTLdDA8/edit"
+            target="_blank" rel="noopener">
+            Ver hoja de calculo
+        </a>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Logica del formulario -->
+    <script src="js/app.js"></script>
 
 </body>
+
 </html>
