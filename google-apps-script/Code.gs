@@ -9,8 +9,9 @@
 // ID de la hoja de cálculo
 var SPREADSHEET_ID = '19liMdG9cbgL0dZvUkb2Ri77NCOO-BmAwBF_QWTLdDA8';
 
-// Nombre de la hoja (pestaña) - ajustar si es diferente
-var NOMBRE_HOJA = 'Hoja 1';
+// Nombre de las hojas (pestañas)
+var NOMBRE_HOJA_1 = 'Hoja1'; // Visita 1er Semestre
+var NOMBRE_HOJA_2 = 'Hoja2'; // Visita 2do Semestre
 
 // Fila donde empiezan los datos
 var FILA_INICIO = 7;
@@ -47,6 +48,8 @@ function doPost(e) {
   
   try {
     var datos = JSON.parse(e.postData.contents);
+    Logger.log('Datos recibidos en doPost: ' + JSON.stringify(datos));
+    Logger.log('tipoVisita recibido: ' + datos.tipoVisita + ' (tipo: ' + typeof datos.tipoVisita + ')');
     resultado = actualizarFila(datos);
   } catch (error) {
     resultado = { exito: false, mensaje: 'Error al procesar datos: ' + error.toString() };
@@ -65,7 +68,7 @@ function buscarPunto(codigo) {
     return { exito: false, mensaje: 'Debe ingresar un código de punto' };
   }
   
-  var hoja = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(NOMBRE_HOJA);
+  var hoja = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(NOMBRE_HOJA_1);
   
   if (!hoja) {
     // Intentar con la primera hoja si no encuentra por nombre
@@ -125,7 +128,7 @@ function buscarPunto(codigo) {
  * Obtiene todos los códigos de puntos disponibles para el autocompletado
  */
 function obtenerTodosLosPuntos() {
-  var hoja = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(NOMBRE_HOJA);
+  var hoja = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(NOMBRE_HOJA_1);
   
   if (!hoja) {
     hoja = SpreadsheetApp.openById(SPREADSHEET_ID).getSheets()[0];
@@ -161,10 +164,16 @@ function actualizarFila(datos) {
     return { exito: false, mensaje: 'Debe especificar un código de punto' };
   }
   
-  var hoja = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(NOMBRE_HOJA);
+  // Seleccionar la hoja según el tipo de visita
+  // Convertir a string para comparación segura (por si llega como número)
+  var tipoVisitaStr = String(datos.tipoVisita).trim();
+  Logger.log('tipoVisitaStr para comparar: "' + tipoVisitaStr + '"');
+  var nombreHojaDestino = (tipoVisitaStr === '2') ? NOMBRE_HOJA_2 : NOMBRE_HOJA_1;
+  Logger.log('Hoja destino seleccionada: ' + nombreHojaDestino);
+  var hoja = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(nombreHojaDestino);
   
   if (!hoja) {
-    hoja = SpreadsheetApp.openById(SPREADSHEET_ID).getSheets()[0];
+    return { exito: false, mensaje: 'No se encontró la hoja: ' + nombreHojaDestino };
   }
   
   var ultimaFila = hoja.getLastRow();
@@ -223,11 +232,13 @@ function actualizarFila(datos) {
   // Columna L (12) - Visita 1 Semestre
   if (datos.visita1 !== undefined && datos.visita1 !== '') {
     hoja.getRange(filaEncontrada, 12).setValue(datos.visita1);
+    actualizarMantenimientoInterno(datos.codigo, datos.visita1);
   }
   
   // Columna M (13) - Visita 2 Semestre
   if (datos.visita2 !== undefined && datos.visita2 !== '') {
     hoja.getRange(filaEncontrada, 13).setValue(datos.visita2);
+    actualizarMantenimientoInterno(datos.codigo, datos.visita2);
   }
   
   // Columna N (14) - Observaciones
@@ -285,4 +296,35 @@ function actualizarFila(datos) {
     mensaje: 'Datos actualizados correctamente en la fila ' + filaEncontrada,
     fila: filaEncontrada
   };
+}
+
+function actualizarMantenimientoInterno(codigoPunto, fecha) {
+
+  const idSheet3 = "1KaiPh8DiGMmPco5KWfhetaEPfJxLP0pPss8uhpgFAbk";
+  const hojaDestino = SpreadsheetApp.openById(idSheet3).getSheetByName("Vis");
+
+  if (!codigoPunto || !fecha) return;
+
+  const fechaObj = new Date(fecha);
+  const mes = fechaObj.getMonth() + 1;
+
+  const ultimaFila = hojaDestino.getLastRow();
+
+  const datosDestino = hojaDestino.getRange(10, 2, ultimaFila - 9, 1).getValues();
+
+  for (let i = 0; i < datosDestino.length; i++) {
+
+    const codigoDestino = String(datosDestino[i][0]).trim();
+
+    if (codigoDestino === String(codigoPunto).trim()) {
+
+      const fila = i + 10;
+      const columnaMes = mes + 6; // Enero = G
+
+      hojaDestino.getRange(fila, columnaMes).setValue("X");
+      hojaDestino.getRange(fila, 3).setBackground("#93c47d");
+
+      break;
+    }
+  }
 }

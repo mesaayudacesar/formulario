@@ -4,13 +4,14 @@
 
 // URL del Google Apps Script desplegado como Web App
 // IMPORTANTE: Reemplazar con la URL real después de desplegar el script
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyAERSrOM4Qzh2zQn0V64xLyT0nbpd2W3DdRcLHWycjTENdkhdeE71CxB8rHu0HpO6d/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyrKer04-Zu-c4T4wjC60qZUnGf2KqkFlCLGQBt-QFjRnMoBqCz4LMzQp6BuPkZVe9XLQ/exec';
 
 // Variables globales
 let puntoEncontrado = null;
 let listaPuntos = [];
 let filaEncontrada = null;
 let categoriaActual = null;
+let tipoVisitaActual = null; // '1' o '2'
 
 // ===========================================
 // Inicialización
@@ -44,7 +45,8 @@ function inicializar() {
  */
 function actualizarHoraActual() {
   const campoHora = document.getElementById('horaSincronizada');
-  if (campoHora) {
+  const selectCamaras = document.getElementById('camaras');
+  if (campoHora && selectCamaras && selectCamaras.value === 'SI') {
     const ahora = new Date();
     const opciones = {
       hour: '2-digit',
@@ -53,6 +55,8 @@ function actualizarHoraActual() {
       hour12: true
     };
     campoHora.value = ahora.toLocaleTimeString('es-CO', opciones);
+  } else if (campoHora && (!selectCamaras || selectCamaras.value !== 'SI')) {
+    campoHora.value = '';
   }
 }
 
@@ -115,7 +119,63 @@ function configurarEventos() {
  * Por ejemplo: mostrar cantidad de cámaras solo si tiene cámaras
  */
 function configurarCamposCondicionales() {
-  // Cámaras -> Cantidad de cámaras
+  // Radios de Tipo de Visita
+  const radiosVisita = document.querySelectorAll('input[name="tipoVisita"]');
+  radiosVisita.forEach(radio => {
+    radio.addEventListener('change', () => {
+      tipoVisitaActual = radio.value;
+      const campoFecha = document.getElementById('campoFechaVisita');
+      const labelFecha = document.getElementById('labelFechaVisita');
+      if (campoFecha) campoFecha.style.display = 'block';
+      if (labelFecha) {
+        labelFecha.innerHTML = (tipoVisitaActual === '1' ? 'Fecha Visita 1er Semestre' : 'Fecha Visita 2do Semestre') +
+          ' <span style="color: var(--color-error);">*</span>';
+      }
+      // Poner la fecha actual por defecto al cambiar de tipo (el técnico puede modificarla)
+      const fechaInput = document.getElementById('fechaVisita');
+      if (fechaInput) {
+        const hoy = new Date();
+        const yyyy = hoy.getFullYear();
+        const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+        const dd = String(hoy.getDate()).padStart(2, '0');
+        fechaInput.value = `${yyyy}-${mm}-${dd}`;
+        fechaInput.classList.remove('campo-invalido');
+      }
+      // Mostrar el resto del formulario ya que la fecha está lista
+      const detalles = document.getElementById('formularioDetalles');
+      if (detalles) {
+        detalles.style.display = 'block';
+        aplicarFiltroCategoria();
+        actualizarProgreso();
+      }
+    });
+  });
+
+  // Fecha visita -> mostrar el resto del formulario al seleccionar fecha
+  const campoFechaVisita = document.getElementById('fechaVisita');
+  if (campoFechaVisita) {
+    campoFechaVisita.addEventListener('change', () => {
+      campoFechaVisita.classList.remove('campo-invalido');
+      const detalles = document.getElementById('formularioDetalles');
+      if (detalles && campoFechaVisita.value) {
+        detalles.style.display = 'block';
+        aplicarFiltroCategoria();
+        actualizarProgreso();
+      }
+    });
+  }
+
+  // Limpiar estilo campo-invalido en selects obligatorios al cambiar valor
+  ['tecnico', 'actualizacion', 'camaras', 'alarmas', 'estado', 'directv'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('change', () => {
+        if (el.value) el.classList.remove('campo-invalido');
+      });
+    }
+  });
+
+  // Cámaras -> Cantidad de cámaras + detalles + hora sincronizada
   const selectCamaras = document.getElementById('camaras');
   if (selectCamaras) {
     selectCamaras.addEventListener('change', () => {
@@ -123,6 +183,12 @@ function configurarCamposCondicionales() {
       if (grupoCantCamaras) {
         grupoCantCamaras.style.display = selectCamaras.value === 'SI' ? 'block' : 'none';
       }
+      const grupoCamarasDetalles = document.getElementById('grupoCamarasDetalles');
+      if (grupoCamarasDetalles) {
+        grupoCamarasDetalles.style.display = selectCamaras.value === 'SI' ? 'block' : 'none';
+      }
+      // Actualizar hora al activar cámaras; limpiar al desactivar
+      actualizarHoraActual();
     });
   }
 
@@ -308,6 +374,70 @@ async function enviarDatos() {
     return;
   }
 
+  // Validar campos obligatorios visibles
+  const camposObligatorios = [];
+
+  // Tecnico
+  if (!document.getElementById('tecnico').value) {
+    camposObligatorios.push({ id: 'tecnico', nombre: 'Nombre del Técnico' });
+  }
+
+  // Actualizacion (siempre visible en detalles)
+  if (!document.getElementById('actualizacion').value) {
+    camposObligatorios.push({ id: 'actualizacion', nombre: 'Actualizacion' });
+  }
+
+  // Campos de Seguridad (solo si la sección es visible)
+  const seccionSeguridadVisible = document.getElementById('seccionSeguridad') &&
+    document.getElementById('seccionSeguridad').style.display !== 'none';
+  if (seccionSeguridadVisible) {
+    if (!document.getElementById('camaras').value) {
+      camposObligatorios.push({ id: 'camaras', nombre: 'Camaras' });
+    }
+    if (!document.getElementById('alarmas').value) {
+      camposObligatorios.push({ id: 'alarmas', nombre: 'Alarmas' });
+    }
+    // Estado: solo obligatorio cuando Alarmas = SI
+    const grupoAlarmasVisible = document.getElementById('grupoAlarmas') &&
+      document.getElementById('grupoAlarmas').style.display !== 'none';
+    if (grupoAlarmasVisible && !document.getElementById('estado').value) {
+      camposObligatorios.push({ id: 'estado', nombre: 'Estado' });
+    }
+  }
+
+  // DIRECTV (solo si la sección es visible)
+  const seccionDirectvVisible = document.getElementById('seccionDirectv') &&
+    document.getElementById('seccionDirectv').style.display !== 'none';
+  if (seccionDirectvVisible && !document.getElementById('directv').value) {
+    camposObligatorios.push({ id: 'directv', nombre: 'DIRECTV' });
+  }
+
+  if (camposObligatorios.length > 0) {
+    const nombres = camposObligatorios.map(c => c.nombre).join(', ');
+    mostrarNotificacionError('Campos obligatorios sin completar: ' + nombres);
+    camposObligatorios.forEach(c => {
+      const el = document.getElementById(c.id);
+      if (el) el.classList.add('campo-invalido');
+    });
+    document.getElementById(camposObligatorios[0].id).scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  // Validar tipo de visita y fecha obligatoria
+  if (!tipoVisitaActual) {
+    mostrarNotificacionError('Debe seleccionar el tipo de visita (1er o 2do semestre)');
+    document.getElementById('formularioSecciones').scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+  const fechaVisitaVal = document.getElementById('fechaVisita').value;
+  if (!fechaVisitaVal) {
+    const nombreVisita = tipoVisitaActual === '1' ? 'Visita 1er Semestre' : 'Visita 2do Semestre';
+    mostrarNotificacionError('La fecha de ' + nombreVisita + ' es obligatoria');
+    document.getElementById('fechaVisita').classList.add('campo-invalido');
+    document.getElementById('fechaVisita').scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+
   // Actualizar hora sincronizada al momento del envío
   actualizarHoraActual();
 
@@ -348,7 +478,12 @@ async function enviarDatos() {
  * Recopila todos los datos del formulario
  */
 function recopilarDatos() {
+  const fechaVisita = document.getElementById('fechaVisita').value;
+  const visita1 = tipoVisitaActual === '1' ? fechaVisita : '';
+  const visita2 = tipoVisitaActual === '2' ? fechaVisita : '';
+
   return {
+    tipoVisita: tipoVisitaActual,
     tecnico: document.getElementById('tecnico').value,
     codigo: document.getElementById('codigoPunto').value.trim(),
     cantEquipos: document.getElementById('cantEquipos').value,
@@ -358,10 +493,10 @@ function recopilarDatos() {
     cantCamaras: document.getElementById('cantCamaras').value,
     alarmas: document.getElementById('alarmas').value,
     serialControl: document.getElementById('serialControl').value.trim(),
-    visita1: document.getElementById('visita1').value,
-    visita2: document.getElementById('visita2').value,
+    visita1: visita1,
+    visita2: visita2,
     observaciones: document.getElementById('observaciones').value.trim(),
-    horaSincronizada: document.getElementById('horaSincronizada').value,
+    horaSincronizada: document.getElementById('camaras').value === 'SI' ? document.getElementById('horaSincronizada').value : '',
     diasGrabacion: document.getElementById('diasGrabacion').value,
     numLinea: document.getElementById('numLinea').value.trim(),
     iccid: document.getElementById('iccid').value.trim(),
@@ -436,6 +571,7 @@ function llenarCampos(datos) {
     if (valCamaras === 'SI' || valCamaras === 'SÍ') {
       document.getElementById('camaras').value = 'SI';
       document.getElementById('grupoCantCamaras').style.display = 'block';
+      document.getElementById('grupoCamarasDetalles').style.display = 'block';
     } else if (valCamaras === 'NO') {
       document.getElementById('camaras').value = 'NO';
     }
@@ -455,8 +591,26 @@ function llenarCampos(datos) {
   }
 
   if (datos.serialControl) document.getElementById('serialControl').value = datos.serialControl;
-  if (datos.visita1) document.getElementById('visita1').value = datos.visita1;
-  if (datos.visita2) document.getElementById('visita2').value = datos.visita2;
+  // Restaurar tipo de visita y fecha a partir de datos existentes
+  if (datos.visita1) {
+    tipoVisitaActual = '1';
+    document.getElementById('radioVisita1').checked = true;
+    document.getElementById('fechaVisita').value = datos.visita1;
+    document.getElementById('fechaVisita').classList.remove('campo-invalido');
+    document.getElementById('campoFechaVisita').style.display = 'block';
+    const labelFecha = document.getElementById('labelFechaVisita');
+    if (labelFecha) labelFecha.innerHTML = 'Fecha Visita 1er Semestre <span style="color: var(--color-error);">*</span>';
+    document.getElementById('formularioDetalles').style.display = 'block';
+  } else if (datos.visita2) {
+    tipoVisitaActual = '2';
+    document.getElementById('radioVisita2').checked = true;
+    document.getElementById('fechaVisita').value = datos.visita2;
+    document.getElementById('fechaVisita').classList.remove('campo-invalido');
+    document.getElementById('campoFechaVisita').style.display = 'block';
+    const labelFecha = document.getElementById('labelFechaVisita');
+    if (labelFecha) labelFecha.innerHTML = 'Fecha Visita 2do Semestre <span style="color: var(--color-error);">*</span>';
+    document.getElementById('formularioDetalles').style.display = 'block';
+  }
   if (datos.observaciones) document.getElementById('observaciones').value = datos.observaciones;
   if (datos.diasGrabacion) document.getElementById('diasGrabacion').value = datos.diasGrabacion;
   if (datos.numLinea) document.getElementById('numLinea').value = datos.numLinea;
@@ -511,20 +665,16 @@ function aplicarFiltroCategoria() {
 }
 
 function mostrarSecciones() {
+  // Mostrar solo la seccion de tipo de visita
   const secciones = document.getElementById('formularioSecciones');
   if (secciones) {
     secciones.classList.add('visible');
   }
 
-  const barraProgreso = document.getElementById('barraProgresoContainer');
-  if (barraProgreso) {
-    barraProgreso.classList.add('visible');
-  }
-
-  // Mostrar botones de accion
-  const botones = document.getElementById('botonesAccion');
-  if (botones) {
-    botones.style.display = 'flex';
+  // El formularioDetalles permanece oculto hasta que se seleccione la fecha
+  const detalles = document.getElementById('formularioDetalles');
+  if (detalles) {
+    detalles.style.display = 'none';
   }
 }
 
@@ -537,15 +687,9 @@ function ocultarSecciones() {
     secciones.classList.remove('visible');
   }
 
-  const barraProgreso = document.getElementById('barraProgresoContainer');
-  if (barraProgreso) {
-    barraProgreso.classList.remove('visible');
-  }
-
-  // Ocultar botones de accion
-  const botones = document.getElementById('botonesAccion');
-  if (botones) {
-    botones.style.display = 'none';
+  const detalles = document.getElementById('formularioDetalles');
+  if (detalles) {
+    detalles.style.display = 'none';
   }
 }
 
@@ -652,12 +796,30 @@ function limpiarFormulario() {
   puntoEncontrado = null;
   filaEncontrada = null;
   categoriaActual = null;
+  tipoVisitaActual = null;
 
   // Restaurar visibilidad de secciones
   const seccionSeguridad = document.getElementById('seccionSeguridad');
   const seccionDirectv = document.getElementById('seccionDirectv');
   if (seccionSeguridad) seccionSeguridad.style.display = '';
   if (seccionDirectv) seccionDirectv.style.display = '';
+
+  // Resetear selector de visita y campo de fecha
+  const radios = document.querySelectorAll('input[name="tipoVisita"]');
+  radios.forEach(r => r.checked = false);
+  const campoFechaVisita = document.getElementById('campoFechaVisita');
+  if (campoFechaVisita) campoFechaVisita.style.display = 'none';
+  const fechaVisitaInput = document.getElementById('fechaVisita');
+  if (fechaVisitaInput) {
+    fechaVisitaInput.value = '';
+    fechaVisitaInput.classList.remove('campo-invalido');
+  }
+  const labelFecha = document.getElementById('labelFechaVisita');
+  if (labelFecha) labelFecha.innerHTML = 'Fecha de Visita <span style="color: var(--color-error);">*</span>';
+
+  // Ocultar formularioDetalles
+  const detalles = document.getElementById('formularioDetalles');
+  if (detalles) detalles.style.display = 'none';
 
   // Limpiar campo de búsqueda
   document.getElementById('codigoPunto').value = '';
@@ -671,7 +833,7 @@ function limpiarFormulario() {
 
   // Limpiar todos los campos
   const camposTexto = ['cantEquipos', 'cantCamaras', 'serialControl',
-    'visita1', 'visita2', 'observaciones', 'diasGrabacion',
+    'observaciones', 'diasGrabacion',
     'numLinea', 'iccid', 'cantDeco', 'serialDeco', 'serialTarjeta'];
 
   camposTexto.forEach(id => {
@@ -683,14 +845,17 @@ function limpiarFormulario() {
   const selects = ['tecnico', 'actualizacion', 'camaras', 'alarmas', 'estado', 'directv'];
   selects.forEach(id => {
     const campo = document.getElementById(id);
-    if (campo) campo.value = '';
+    if (campo) {
+      campo.value = '';
+      campo.classList.remove('campo-invalido');
+    }
   });
 
   // Resetear checkbox
   document.getElementById('versionEquipo').checked = false;
 
   // Ocultar campos condicionales
-  const camposCondicionales = ['grupoCantCamaras', 'grupoAlarmas', 'camposDirectv'];
+  const camposCondicionales = ['grupoCantCamaras', 'grupoCamarasDetalles', 'grupoAlarmas', 'camposDirectv'];
   camposCondicionales.forEach(id => {
     const campo = document.getElementById(id);
     if (campo) campo.style.display = 'none';

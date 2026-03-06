@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
-        content="Formulario de inventario para registro de equipos, camaras, alarmas y DIRECTV en puntos de servicio">
-    <title>Formulario de Inventario</title>
+        content="Formulario de Mantenimiento Unificado para Registro de Equipos, Cámaras, Alarmas y DIRECTV en Servicios por Compumueble (CM) y Punto de Venta (PDV)">
+    <title>Formulario de Mantenimiento Unificado</title>
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -43,8 +43,8 @@
 
         <!-- Encabezado tipo Google Forms -->
         <header class="encabezado-principal">
-            <h1 class="encabezado-titulo">Formulario de mantenimiento completo</h1>
-            <p class="encabezado-subtitulo">Registro de equipos, seguridad y servicios por punto de servicio</p>
+            <h1 class="encabezado-titulo">Formulario de Mantenimiento Unificado</h1>
+            <p class="encabezado-subtitulo">Registro de Equipos, Seguridad, Servicios por Compumueble (CM) y Punto de Venta (PDV)</p>
             <p class="encabezado-requerido">* Indica que la pregunta es obligatoria</p>
         </header>
 
@@ -58,8 +58,8 @@
                     </label>
                     <select class="form-select" id="tecnico" required>
                         <option value="">Seleccionar técnico</option>
-                        <option value="JOHN BARRAGAN">JOHN BARRAGAN</option>
-                        <option value="RUBEN RAPALINO">RUBEN RAPALINO</option>
+                        <option value="JOHN CARLOS BARRAGAN ROMERO">JOHN CARLOS BARRAGAN ROMERO</option>
+                        <option value="RUBEN DARIO RAPALINO TAPIA">RUBEN DARIO RAPALINO TAPIA</option>
                         <option value="DANIEL ENRIQUE ACOSTA BOLAÑO">DANIEL ENRIQUE ACOSTA BOLAÑO</option>
                         <option value="JIMMY CASTELLANOS MADRID">JIMMY CASTELLANOS MADRID</option>
                         <option value="ANDRES JUAN COBO OSPINO">ANDRES JUAN COBO OSPINO</option>
@@ -102,19 +102,54 @@
                 </div>
             </section>
 
-            <!-- BARRA DE PROGRESO -->
-            <div id="barraProgresoContainer" class="barra-progreso-container">
-                <div class="progreso-texto">
-                    <span>Progreso</span>
-                    <span id="progresoTexto">0 de 8 campos</span>
-                </div>
-                <div class="barra-progreso">
-                    <div id="barraProgresoFill" class="barra-progreso-fill"></div>
-                </div>
+            <!-- PASO 2: TIPO DE VISITA (aparece al encontrar el punto) -->
+            <div id="formularioSecciones" class="formulario-secciones">
+                <section class="seccion-tarjeta" id="seccionTipoVisita">
+                    <h2 class="seccion-titulo">
+                        <i class="bi bi-calendar-check icono-seccion"></i>
+                        Tipo de Visita
+                    </h2>
+
+                    <div class="campo-grupo">
+                        <label class="form-label">
+                            Seleccionar Visita <span style="color: var(--color-error);">*</span>
+                        </label>
+                        <div style="display: flex; gap: 2.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipoVisita" id="radioVisita1" value="1">
+                                <label class="form-check-label" for="radioVisita1">Visita 1er Semestre</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipoVisita" id="radioVisita2" value="2">
+                                <label class="form-check-label" for="radioVisita2">Visita 2do Semestre</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="campoFechaVisita" style="display: none; margin-top: 1.25rem;">
+                        <div class="campo-grupo">
+                            <label for="fechaVisita" class="form-label" id="labelFechaVisita">
+                                Fecha de Visita <span style="color: var(--color-error);">*</span>
+                            </label>
+                            <input type="date" class="form-control" id="fechaVisita">
+                        </div>
+                    </div>
+                </section>
             </div>
 
-            <!-- SECCIONES DEL FORMULARIO (ocultas hasta buscar punto) -->
-            <div id="formularioSecciones" class="formulario-secciones">
+            <!-- PASO 3: DETALLE DEL FORMULARIO (aparece al seleccionar fecha de visita) -->
+            <div id="formularioDetalles" style="display: none;">
+
+                <!-- BARRA DE PROGRESO -->
+                <div id="barraProgresoContainer" class="barra-progreso-container visible">
+                    <div class="progreso-texto">
+                        <span>Progreso</span>
+                        <span id="progresoTexto">0 de 8 campos</span>
+                    </div>
+                    <div class="barra-progreso">
+                        <div id="barraProgresoFill" class="barra-progreso-fill"></div>
+                    </div>
+                </div>
 
                 <!-- SECCION: MANTENIMIENTO EQUIPOS (PC) -->
                 <section class="seccion-tarjeta">
@@ -130,7 +165,7 @@
                         </div>
 
                         <div class="campo-grupo">
-                            <label for="actualizacion" class="form-label">Actualizacion</label>
+                            <label for="actualizacion" class="form-label">Actualización <span style="color: var(--color-error);">*</span></label>
                             <select class="form-select" id="actualizacion">
                                 <option value="">Seleccionar</option>
                                 <option value="SI">Si</option>
@@ -153,15 +188,15 @@
                 <section class="seccion-tarjeta" id="seccionSeguridad">
                     <h2 class="seccion-titulo">
                         <i class="bi bi-shield-lock icono-seccion"></i>
-                        Seguridad - Camaras y Alarmas (CCTV)
+                        Seguridad - Cámaras y Alarmas (CCTV)
                     </h2>
 
                     <!-- Camaras -->
-                    <p class="subseccion-titulo">Camaras</p>
+                    <p class="subseccion-titulo">Cámaras</p>
 
                     <div class="grilla-campos">
                         <div class="campo-grupo">
-                            <label for="camaras" class="form-label">Camaras</label>
+                            <label for="camaras" class="form-label">Cámaras <span style="color: var(--color-error);">*</span></label>
                             <select class="form-select" id="camaras">
                                 <option value="">Seleccionar</option>
                                 <option value="SI">Si</option>
@@ -170,8 +205,26 @@
                         </div>
 
                         <div class="campo-grupo" id="grupoCantCamaras" style="display: none;">
-                            <label for="cantCamaras" class="form-label">Cantidad de Camaras</label>
+                            <label for="cantCamaras" class="form-label">Cantidad de Cámaras</label>
                             <input type="number" class="form-control" id="cantCamaras" placeholder="0" min="0">
+                        </div>
+                    </div>
+
+                    <!-- Campos dependientes de Cámaras (se muestran cuando cámaras = SI) -->
+                    <div id="grupoCamarasDetalles" style="display: none; margin-top: 1rem;">
+                        <div class="grilla-campos">
+                            <div class="campo-grupo">
+                                <label for="horaSincronizada" class="form-label">
+                                    Hora Sincronizada <span
+                                        style="color: var(--texto-deshabilitado); font-weight: 400; text-transform: none;">(Automatica)</span>
+                                </label>
+                                <input type="text" class="form-control" id="horaSincronizada" readonly>
+                            </div>
+
+                            <div class="campo-grupo">
+                                <label for="diasGrabacion" class="form-label">Días de Grabación</label>
+                                <input type="number" class="form-control" id="diasGrabacion" placeholder="0" min="0">
+                            </div>
                         </div>
                     </div>
 
@@ -182,14 +235,13 @@
 
                     <div class="grilla-campos">
                         <div class="campo-grupo">
-                            <label for="alarmas" class="form-label">Alarmas</label>
+                            <label for="alarmas" class="form-label">Alarmas <span style="color: var(--color-error);">*</span></label>
                             <select class="form-select" id="alarmas">
                                 <option value="">Seleccionar</option>
                                 <option value="SI">Si</option>
                                 <option value="NO">No</option>
                             </select>
                         </div>
-
                     </div>
 
                     <!-- Campos dependientes de Alarmas (se muestran cuando alarmas = SI) -->
@@ -204,35 +256,12 @@
 
                         <hr class="separador">
 
-                        <!-- Visitas y detalles -->
-                        <p class="subseccion-titulo">Visitas y Detalles</p>
+                        <!-- Detalles -->
+                        <p class="subseccion-titulo">Detalles</p>
 
                         <div class="grilla-campos">
                             <div class="campo-grupo">
-                                <label for="visita1" class="form-label">Visita 1er Semestre</label>
-                                <input type="date" class="form-control" id="visita1">
-                            </div>
-
-                            <div class="campo-grupo">
-                                <label for="visita2" class="form-label">Visita 2do Semestre</label>
-                                <input type="date" class="form-control" id="visita2">
-                            </div>
-
-                            <div class="campo-grupo">
-                                <label for="horaSincronizada" class="form-label">
-                                    Hora Sincronizada <span
-                                        style="color: var(--texto-deshabilitado); font-weight: 400; text-transform: none;">(automatica)</span>
-                                </label>
-                                <input type="text" class="form-control" id="horaSincronizada" readonly>
-                            </div>
-
-                            <div class="campo-grupo">
-                                <label for="diasGrabacion" class="form-label">Dias de Grabacion</label>
-                                <input type="number" class="form-control" id="diasGrabacion" placeholder="0" min="0">
-                            </div>
-
-                            <div class="campo-grupo">
-                                <label for="numLinea" class="form-label">Num # Linea</label>
+                                <label for="numLinea" class="form-label">Número # Linea</label>
                                 <input type="text" class="form-control" id="numLinea" placeholder="Numero de linea">
                             </div>
 
@@ -242,7 +271,7 @@
                             </div>
 
                             <div class="campo-grupo">
-                                <label for="estado" class="form-label">Estado</label>
+                                <label for="estado" class="form-label">Estado de la SIM - Alarma <span style="color: var(--color-error);">*</span></label>
                                 <select class="form-select" id="estado">
                                     <option value="">Seleccionar</option>
                                     <option value="ACTIVA">Activa</option>
@@ -270,7 +299,7 @@
                     </h2>
 
                     <div class="campo-grupo">
-                        <label for="directv" class="form-label">DIRECTV</label>
+                        <label for="directv" class="form-label">DIRECTV <span style="color: var(--color-error);">*</span></label>
                         <select class="form-select" id="directv">
                             <option value="">Seleccionar</option>
                             <option value="SI">Si</option>
@@ -299,17 +328,17 @@
                     </div>
                 </section>
 
-            </div>
+                <!-- BOTONES DE ACCION -->
+                <div id="botonesAccion" class="botones-accion" style="display: flex;">
+                    <button type="button" class="btn-primario btn-enviar" id="btnEnviar">
+                        Enviar
+                        <div id="spinnerEnviar" class="spinner-carga"></div>
+                    </button>
+                    <button type="button" class="btn-limpiar" id="btnLimpiar">
+                        Borrar formulario
+                    </button>
+                </div>
 
-            <!-- BOTONES DE ACCION -->
-            <div id="botonesAccion" class="botones-accion" style="display: none;">
-                <button type="button" class="btn-primario btn-enviar" id="btnEnviar">
-                    Enviar
-                    <div id="spinnerEnviar" class="spinner-carga"></div>
-                </button>
-                <button type="button" class="btn-limpiar" id="btnLimpiar">
-                    Borrar formulario
-                </button>
             </div>
 
         </form>
