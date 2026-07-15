@@ -4,7 +4,7 @@
 
 // URL del Google Apps Script desplegado como Web App
 // IMPORTANTE: Reemplazar con la URL real después de desplegar el script
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyrKer04-Zu-c4T4wjC60qZUnGf2KqkFlCLGQBt-QFjRnMoBqCz4LMzQp6BuPkZVe9XLQ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwPudabpxXp8T1Tsdcjp8aKaBHRQUN-WFIdHhsNeWzrMyxQgPYC85j8NEnIUCmQwgzUIg/exec';
 
 // Variables globales
 let puntoEncontrado = null;
@@ -38,6 +38,17 @@ function inicializar() {
 
   // Configurar la visibilidad condicional de campos
   configurarCamposCondicionales();
+
+  // NOTA: Como este año el radio "Visita 1er Semestre" está comentado en el
+  // HTML y "Visita 2do Semestre" viene marcado por defecto (checked), hay que
+  // disparar manualmente el evento 'change' para que se ejecute la misma
+  // lógica que si el técnico lo hubiera seleccionado (desplegar la búsqueda,
+  // recargar la lista de puntos de Hoja2, etc). El próximo año, al
+  // reactivar el 1er Semestre, este bloque puede eliminarse sin problema.
+  const radioVisitaPorDefecto = document.querySelector('input[name="tipoVisita"]:checked');
+  if (radioVisitaPorDefecto) {
+    radioVisitaPorDefecto.dispatchEvent(new Event('change'));
+  }
 }
 
 /**
@@ -120,34 +131,31 @@ function configurarEventos() {
  */
 function configurarCamposCondicionales() {
   // Radios de Tipo de Visita
+  // Ahora se seleccionan ANTES de buscar el punto: determinan en qué hoja
+  // (Hoja1 = 1er Semestre, Hoja2 = 2do Semestre) se realiza la búsqueda.
   const radiosVisita = document.querySelectorAll('input[name="tipoVisita"]');
   radiosVisita.forEach(radio => {
     radio.addEventListener('change', () => {
+      const tipoAnterior = tipoVisitaActual;
       tipoVisitaActual = radio.value;
-      const campoFecha = document.getElementById('campoFechaVisita');
-      const labelFecha = document.getElementById('labelFechaVisita');
-      if (campoFecha) campoFecha.style.display = 'block';
-      if (labelFecha) {
-        labelFecha.innerHTML = (tipoVisitaActual === '1' ? 'Fecha Visita 1er Semestre' : 'Fecha Visita 2do Semestre') +
-          ' <span style="color: var(--color-error);">*</span>';
+
+      // Desplegar la sección de búsqueda de punto ahora que ya se eligió el tipo de visita
+      const contenedorBusqueda = document.getElementById('contenedorBusqueda');
+      if (contenedorBusqueda) contenedorBusqueda.classList.add('visible');
+
+      // Si ya se había encontrado un punto con el tipo anterior, se limpia
+      // la búsqueda para evitar enviar datos de la hoja equivocada.
+      if (tipoAnterior && tipoAnterior !== tipoVisitaActual && filaEncontrada) {
+        ocultarSecciones();
+        const infoDiv = document.getElementById('infoPunto');
+        if (infoDiv) infoDiv.classList.remove('visible');
+        puntoEncontrado = null;
+        filaEncontrada = null;
+        categoriaActual = null;
       }
-      // Poner la fecha actual por defecto al cambiar de tipo (el técnico puede modificarla)
-      const fechaInput = document.getElementById('fechaVisita');
-      if (fechaInput) {
-        const hoy = new Date();
-        const yyyy = hoy.getFullYear();
-        const mm = String(hoy.getMonth() + 1).padStart(2, '0');
-        const dd = String(hoy.getDate()).padStart(2, '0');
-        fechaInput.value = `${yyyy}-${mm}-${dd}`;
-        fechaInput.classList.remove('campo-invalido');
-      }
-      // Mostrar el resto del formulario ya que la fecha está lista
-      const detalles = document.getElementById('formularioDetalles');
-      if (detalles) {
-        detalles.style.display = 'block';
-        aplicarFiltroCategoria();
-        actualizarProgreso();
-      }
+
+      // Recargar la lista de puntos para autocompletado según la hoja elegida
+      cargarListaPuntos();
     });
   });
 
@@ -231,6 +239,12 @@ async function buscarPunto() {
     return;
   }
 
+  if (!tipoVisitaActual) {
+    mostrarNotificacionError('Debe seleccionar el tipo de visita (1er o 2do semestre) antes de buscar');
+    document.getElementById('seccionTipoVisita').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
   // Cerrar autocompletado
   cerrarAutocompletado();
 
@@ -238,7 +252,7 @@ async function buscarPunto() {
   mostrarCargando('Buscando punto...');
 
   try {
-    const url = `${SCRIPT_URL}?accion=buscar&codigo=${encodeURIComponent(codigo)}`;
+    const url = `${SCRIPT_URL}?accion=buscar&codigo=${encodeURIComponent(codigo)}&tipoVisita=${encodeURIComponent(tipoVisitaActual)}`;
     const respuesta = await fetch(url);
     const resultado = await respuesta.json();
 
@@ -298,7 +312,8 @@ async function buscarPunto() {
  */
 async function cargarListaPuntos() {
   try {
-    const url = `${SCRIPT_URL}?accion=obtenerPuntos`;
+    const tipoParam = tipoVisitaActual ? `&tipoVisita=${encodeURIComponent(tipoVisitaActual)}` : '';
+    const url = `${SCRIPT_URL}?accion=obtenerPuntos${tipoParam}`;
     const respuesta = await fetch(url);
     const resultado = await respuesta.json();
 
@@ -488,7 +503,8 @@ function recopilarDatos() {
     codigo: document.getElementById('codigoPunto').value.trim(),
     cantEquipos: document.getElementById('cantEquipos').value,
     actualizacion: document.getElementById('actualizacion').value,
-    versionEquipo: document.getElementById('versionEquipo').checked ? '2.0.44' : '',
+    versionTrayicon: document.getElementById('versionTrayicon').checked ? '4.8.5' : '',
+    versionWebSocket: document.getElementById('versionWebSocket').checked ? '4.8.1' : '',
     camaras: document.getElementById('camaras').value,
     cantCamaras: document.getElementById('cantCamaras').value,
     alarmas: document.getElementById('alarmas').value,
@@ -560,9 +576,14 @@ function llenarCampos(datos) {
     }
   }
 
-  if (datos.versionEquipo) {
-    const version = String(datos.versionEquipo).trim();
-    document.getElementById('versionEquipo').checked = version === '2.0.44' || version.includes('2.0.44');
+  if (datos.versionTrayicon) {
+    const version = String(datos.versionTrayicon).trim();
+    document.getElementById('versionTrayicon').checked = version === '4.8.5' || version.includes('4.8.5');
+  }
+
+  if (datos.versionWebSocket) {
+    const version = String(datos.versionWebSocket).trim();
+    document.getElementById('versionWebSocket').checked = version === '4.8.1' || version.includes('4.8.1');
   }
 
   // Seguridad - Cámaras
@@ -591,25 +612,13 @@ function llenarCampos(datos) {
   }
 
   if (datos.serialControl) document.getElementById('serialControl').value = datos.serialControl;
-  // Restaurar tipo de visita y fecha a partir de datos existentes
-  if (datos.visita1) {
-    tipoVisitaActual = '1';
-    document.getElementById('radioVisita1').checked = true;
-    document.getElementById('fechaVisita').value = datos.visita1;
+
+  // Precargar la fecha de visita según el tipo YA seleccionado por el técnico
+  // (no se debe cambiar tipoVisitaActual aquí: ya determinó en qué hoja se buscó)
+  const fechaExistente = tipoVisitaActual === '2' ? datos.visita2 : datos.visita1;
+  if (fechaExistente) {
+    document.getElementById('fechaVisita').value = fechaExistente;
     document.getElementById('fechaVisita').classList.remove('campo-invalido');
-    document.getElementById('campoFechaVisita').style.display = 'block';
-    const labelFecha = document.getElementById('labelFechaVisita');
-    if (labelFecha) labelFecha.innerHTML = 'Fecha Visita 1er Semestre <span style="color: var(--color-error);">*</span>';
-    document.getElementById('formularioDetalles').style.display = 'block';
-  } else if (datos.visita2) {
-    tipoVisitaActual = '2';
-    document.getElementById('radioVisita2').checked = true;
-    document.getElementById('fechaVisita').value = datos.visita2;
-    document.getElementById('fechaVisita').classList.remove('campo-invalido');
-    document.getElementById('campoFechaVisita').style.display = 'block';
-    const labelFecha = document.getElementById('labelFechaVisita');
-    if (labelFecha) labelFecha.innerHTML = 'Fecha Visita 2do Semestre <span style="color: var(--color-error);">*</span>';
-    document.getElementById('formularioDetalles').style.display = 'block';
   }
   if (datos.observaciones) document.getElementById('observaciones').value = datos.observaciones;
   if (datos.diasGrabacion) document.getElementById('diasGrabacion').value = datos.diasGrabacion;
@@ -665,16 +674,35 @@ function aplicarFiltroCategoria() {
 }
 
 function mostrarSecciones() {
-  // Mostrar solo la seccion de tipo de visita
+  // Mostrar la seccion de fecha de visita
   const secciones = document.getElementById('formularioSecciones');
   if (secciones) {
     secciones.classList.add('visible');
   }
 
-  // El formularioDetalles permanece oculto hasta que se seleccione la fecha
+  // Etiqueta dinámica según el tipo de visita ya seleccionado
+  const labelFecha = document.getElementById('labelFechaVisita');
+  if (labelFecha) {
+    labelFecha.innerHTML = (tipoVisitaActual === '1' ? 'Fecha Visita 1er Semestre' : 'Fecha Visita 2do Semestre') +
+      ' <span style="color: var(--color-error);">*</span>';
+  }
+
+  // Poner la fecha actual por defecto si aún no hay una (el técnico puede modificarla)
+  const fechaInput = document.getElementById('fechaVisita');
+  if (fechaInput && !fechaInput.value) {
+    const hoy = new Date();
+    const yyyy = hoy.getFullYear();
+    const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dd = String(hoy.getDate()).padStart(2, '0');
+    fechaInput.value = `${yyyy}-${mm}-${dd}`;
+    fechaInput.classList.remove('campo-invalido');
+  }
+
+  // El formularioDetalles permanece oculto hasta que se seleccione la fecha,
+  // salvo que ya venga precargada desde datos existentes del punto
   const detalles = document.getElementById('formularioDetalles');
   if (detalles) {
-    detalles.style.display = 'none';
+    detalles.style.display = fechaInput && fechaInput.value ? 'block' : 'none';
   }
 }
 
@@ -711,7 +739,12 @@ function actualizarProgreso() {
   });
 
   // También verificar el checkbox
-  if (document.getElementById('versionEquipo').checked) {
+  if (document.getElementById('versionTrayicon').checked) {
+    completados++;
+  }
+
+  // También verificar el checkbox
+  if (document.getElementById('versionWebSocket').checked) {
     completados++;
   }
 
@@ -733,10 +766,16 @@ function actualizarProgreso() {
     }
   });
 
-  const checkbox = document.getElementById('versionEquipo');
-  if (checkbox) {
-    checkbox.removeEventListener('change', actualizarProgreso);
-    checkbox.addEventListener('change', actualizarProgreso);
+  const checkboxTrayicon = document.getElementById('versionTrayicon');
+  if (checkboxTrayicon) {
+    checkboxTrayicon.removeEventListener('change', actualizarProgreso);
+    checkboxTrayicon.addEventListener('change', actualizarProgreso);
+  }
+
+  const checkboxWebSocket = document.getElementById('versionWebSocket');
+  if (checkboxWebSocket) {
+    checkboxWebSocket.removeEventListener('change', actualizarProgreso);
+    checkboxWebSocket.addEventListener('change', actualizarProgreso);
   }
 }
 
@@ -821,6 +860,19 @@ function limpiarFormulario() {
   const detalles = document.getElementById('formularioDetalles');
   if (detalles) detalles.style.display = 'none';
 
+  // Ocultar y limpiar contenedor de búsqueda hasta elegir tipo de visita otra vez
+  const contenedorBusqueda = document.getElementById('contenedorBusqueda');
+  if (contenedorBusqueda) contenedorBusqueda.classList.remove('visible');
+
+  // NOTA: Este año "Visita 1er Semestre" está comentada en el HTML, así que
+  // si solo queda un radio disponible lo re-marcamos automáticamente al
+  // limpiar (si no, el formulario quedaría sin ninguna visita seleccionable).
+  // El próximo año, al reactivar el 1er Semestre, este bloque puede eliminarse.
+  if (radios.length === 1) {
+    radios[0].checked = true;
+    radios[0].dispatchEvent(new Event('change'));
+  }
+
   // Limpiar campo de búsqueda
   document.getElementById('codigoPunto').value = '';
 
@@ -852,7 +904,8 @@ function limpiarFormulario() {
   });
 
   // Resetear checkbox
-  document.getElementById('versionEquipo').checked = false;
+  document.getElementById('versionTrayicon').checked = false;
+  document.getElementById('versionWebSocket').checked = false;
 
   // Ocultar campos condicionales
   const camposCondicionales = ['grupoCantCamaras', 'grupoCamarasDetalles', 'grupoAlarmas', 'camposDirectv'];

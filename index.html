@@ -69,7 +69,40 @@
                 </div>
             </section>
 
-            <!-- SECCION: BUSQUEDA DE PUNTO -->
+            <!-- SECCION: TIPO DE VISITA (se selecciona antes de buscar el punto) -->
+            <section class="seccion-tarjeta seccion-activa" id="seccionTipoVisita">
+                <h2 class="seccion-titulo">
+                    <i class="bi bi-calendar-check icono-seccion"></i>
+                    Tipo de Visita
+                </h2>
+
+                <div class="campo-grupo">
+                    <label class="form-label">
+                        Seleccionar Visita <span style="color: var(--color-error);">*</span>
+                    </label>
+                    <div style="display: flex; gap: 2.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                        <!--
+                        NOTA: Visita 1er Semestre queda comentada porque este año el
+                        formulario trabaja únicamente sobre Hoja2 (2do Semestre), ya
+                        que Hoja1 tiene una estructura de columnas distinta. El próximo
+                        año, para reactivar el 1er Semestre, simplemente descomentar
+                        este bloque (y quitar el atributo "checked" de radioVisita2 más abajo).
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipoVisita" id="radioVisita1" value="1">
+                            <label class="form-check-label" for="radioVisita1">Visita 1er Semestre</label>
+                        </div>
+                        -->
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipoVisita" id="radioVisita2" value="2" checked>
+                            <label class="form-check-label" for="radioVisita2">Visita 2do Semestre</label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECCION: BUSQUEDA DE PUNTO (se despliega al elegir tipo de visita) -->
+            <div id="contenedorBusqueda" class="formulario-secciones">
             <section class="seccion-tarjeta seccion-activa">
                 <div class="campo-grupo">
                     <label for="codigoPunto" class="form-label">
@@ -101,32 +134,17 @@
                     <span id="textoError"></span>
                 </div>
             </section>
+            </div>
 
-            <!-- PASO 2: TIPO DE VISITA (aparece al encontrar el punto) -->
+            <!-- PASO 2: FECHA DE VISITA (aparece al encontrar el punto) -->
             <div id="formularioSecciones" class="formulario-secciones">
-                <section class="seccion-tarjeta" id="seccionTipoVisita">
+                <section class="seccion-tarjeta" id="seccionFechaVisita">
                     <h2 class="seccion-titulo">
                         <i class="bi bi-calendar-check icono-seccion"></i>
-                        Tipo de Visita
+                        Fecha de Visita
                     </h2>
 
-                    <div class="campo-grupo">
-                        <label class="form-label">
-                            Seleccionar Visita <span style="color: var(--color-error);">*</span>
-                        </label>
-                        <div style="display: flex; gap: 2.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="tipoVisita" id="radioVisita1" value="1">
-                                <label class="form-check-label" for="radioVisita1">Visita 1er Semestre</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="tipoVisita" id="radioVisita2" value="2">
-                                <label class="form-check-label" for="radioVisita2">Visita 2do Semestre</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="campoFechaVisita" style="display: none; margin-top: 1.25rem;">
+                    <div id="campoFechaVisita" style="margin-top: 0;">
                         <div class="campo-grupo">
                             <label for="fechaVisita" class="form-label" id="labelFechaVisita">
                                 Fecha de Visita <span style="color: var(--color-error);">*</span>
@@ -175,9 +193,18 @@
 
                         <div class="campo-grupo" style="display: flex; align-items: flex-end;">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="versionEquipo">
-                                <label class="form-check-label" for="versionEquipo">
-                                    Version 2.0.44
+                                <input class="form-check-input" type="checkbox" id="versionTrayicon">
+                                <label class="form-check-label" for="versionTrayicon">
+                                    Version Tray-Icon 4.8.5
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="campo-grupo" style="display: flex; align-items: flex-end;">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="versionWebSocket">
+                                <label class="form-check-label" for="versionWebSocket">
+                                    Version WebSocket 4.8.1
                                 </label>
                             </div>
                         </div>

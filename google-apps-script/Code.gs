@@ -13,6 +13,88 @@ var SPREADSHEET_ID = '19liMdG9cbgL0dZvUkb2Ri77NCOO-BmAwBF_QWTLdDA8';
 var NOMBRE_HOJA_1 = 'Hoja1'; // Visita 1er Semestre
 var NOMBRE_HOJA_2 = 'Hoja2'; // Visita 2do Semestre
 
+// ===========================================
+// MAPEO DE COLUMNAS POR HOJA
+// -------------------------------------------
+// Hoja1 y Hoja2 tienen estructuras distintas:
+// en Hoja1 la "Versión Equipo" es UNA sola columna (G),
+// mientras que en Hoja2 se separó en dos columnas:
+// Tray-Icon (G) y WebSocket (H). Esto corre todas las
+// columnas siguientes una posición hacia la derecha en Hoja2.
+// ===========================================
+
+// Estructura ORIGINAL de Hoja1 (23 columnas, hasta W)
+var COLUMNAS_HOJA1 = {
+  codigoPunto: 2,      // B
+  nombrePunto: 3,      // C
+  categoria: 4,        // D
+  cantEquipos: 5,      // E
+  actualizacion: 6,    // F
+  versionEquipo: 7,    // G (combinada, sin separar Tray-Icon / WebSocket)
+  camaras: 8,          // H
+  cantCamaras: 9,      // I
+  alarmas: 10,         // J
+  serialControl: 11,   // K
+  visita1: 12,         // L
+  visita2: 13,         // M
+  observaciones: 14,   // N
+  horaSincronizada: 15,// O
+  diasGrabacion: 16,   // P
+  numLinea: 17,        // Q
+  iccid: 18,           // R
+  estado: 19,          // S
+  directv: 20,         // T
+  cantDeco: 21,        // U
+  serialDeco: 22,      // V
+  serialTarjeta: 23    // W
+};
+
+// Estructura NUEVA de Hoja2 (24 columnas, hasta X)
+var COLUMNAS_HOJA2 = {
+  codigoPunto: 2,      // B
+  nombrePunto: 3,      // C
+  categoria: 4,        // D
+  cantEquipos: 5,      // E
+  actualizacion: 6,    // F
+  versionTrayicon: 7,  // G
+  versionWebSocket: 8, // H
+  camaras: 9,          // I
+  cantCamaras: 10,     // J
+  alarmas: 11,         // K
+  serialControl: 12,   // L
+  visita1: 13,         // M
+  visita2: 14,         // N
+  observaciones: 15,   // O
+  horaSincronizada: 16,// P
+  diasGrabacion: 17,   // Q
+  numLinea: 18,        // R
+  iccid: 19,           // S
+  estado: 20,          // T
+  directv: 21,         // U
+  cantDeco: 22,        // V
+  serialDeco: 23,      // W
+  serialTarjeta: 24    // X
+};
+
+/**
+ * Retorna el mapeo de columnas correspondiente segun el nombre de la hoja
+ */
+function obtenerMapeoColumnas(nombreHoja) {
+  return (nombreHoja === NOMBRE_HOJA_2) ? COLUMNAS_HOJA2 : COLUMNAS_HOJA1;
+}
+
+/**
+ * Retorna el nombre de hoja segun el tipo de visita ('1' o '2')
+ * NOTA: Actualmente el formulario solo permite seleccionar Visita 2do
+ * Semestre (ver comentarios en index.html / app.js). La lógica de Visita
+ * 1er Semestre se deja aquí intacta y funcional para reactivarla el
+ * próximo año sin tener que reescribir el backend.
+ */
+function obtenerNombreHoja(tipoVisita) {
+  var tipoVisitaStr = String(tipoVisita).trim();
+  return (tipoVisitaStr === '2') ? NOMBRE_HOJA_2 : NOMBRE_HOJA_1;
+}
+
 // Fila donde empiezan los datos
 var FILA_INICIO = 7;
 
@@ -26,9 +108,9 @@ function doGet(e) {
     var accion = e.parameter.accion;
     
     if (accion === 'buscar') {
-      resultado = buscarPunto(e.parameter.codigo);
+      resultado = buscarPunto(e.parameter.codigo, e.parameter.tipoVisita);
     } else if (accion === 'obtenerPuntos') {
-      resultado = obtenerTodosLosPuntos();
+      resultado = obtenerTodosLosPuntos(e.parameter.tipoVisita);
     } else {
       resultado = { exito: false, mensaje: 'Acción no válida' };
     }
@@ -63,12 +145,15 @@ function doPost(e) {
  * Busca un punto por su código en la columna B
  * Retorna la información de la fila encontrada
  */
-function buscarPunto(codigo) {
+function buscarPunto(codigo, tipoVisita) {
   if (!codigo) {
     return { exito: false, mensaje: 'Debe ingresar un código de punto' };
   }
-  
-  var hoja = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(NOMBRE_HOJA_1);
+
+  var nombreHojaOrigen = obtenerNombreHoja(tipoVisita);
+  var mapeo = obtenerMapeoColumnas(nombreHojaOrigen);
+
+  var hoja = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(nombreHojaOrigen);
   
   if (!hoja) {
     // Intentar con la primera hoja si no encuentra por nombre
@@ -86,37 +171,24 @@ function buscarPunto(codigo) {
     
     if (valorCelda === codigoBuscado) {
       var filaEncontrada = FILA_INICIO + i;
-      
-      // Obtener todos los datos de esa fila (columnas A hasta W = 23 columnas)
-      var datosFila = hoja.getRange(filaEncontrada, 1, 1, 23).getValues()[0];
-      
+
+      // Determinar cuántas columnas leer segun la columna mas alta del mapeo
+      var maxColumna = 0;
+      for (var campo in mapeo) {
+        if (mapeo[campo] > maxColumna) maxColumna = mapeo[campo];
+      }
+
+      var datosFila = hoja.getRange(filaEncontrada, 1, 1, maxColumna).getValues()[0];
+
+      var datos = {};
+      for (var nombreCampo in mapeo) {
+        datos[nombreCampo] = datosFila[mapeo[nombreCampo] - 1];
+      }
+
       return {
         exito: true,
         fila: filaEncontrada,
-        datos: {
-          codigoPunto: datosFila[1],   // B
-          nombrePunto: datosFila[2],    // C - nombre del punto si existe
-          categoria: datosFila[3],      // D - categoria del punto (CM, etc)
-          cantEquipos: datosFila[4],    // E
-          actualizacion: datosFila[5],  // F
-          versionEquipo: datosFila[6],  // G
-          camaras: datosFila[7],        // H
-          cantCamaras: datosFila[8],    // I
-          alarmas: datosFila[9],        // J
-          serialControl: datosFila[10], // K
-          visita1: datosFila[11],       // L
-          visita2: datosFila[12],       // M
-          observaciones: datosFila[13], // N
-          horaSincronizada: datosFila[14], // O
-          diasGrabacion: datosFila[15], // P
-          numLinea: datosFila[16],      // Q
-          iccid: datosFila[17],         // R
-          estado: datosFila[18],        // S
-          directv: datosFila[19],       // T
-          cantDeco: datosFila[20],      // U
-          serialDeco: datosFila[21],    // V
-          serialTarjeta: datosFila[22]  // W
-        }
+        datos: datos
       };
     }
   }
@@ -127,8 +199,10 @@ function buscarPunto(codigo) {
 /**
  * Obtiene todos los códigos de puntos disponibles para el autocompletado
  */
-function obtenerTodosLosPuntos() {
-  var hoja = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(NOMBRE_HOJA_1);
+function obtenerTodosLosPuntos(tipoVisita) {
+  var nombreHojaOrigen = obtenerNombreHoja(tipoVisita);
+
+  var hoja = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(nombreHojaOrigen);
   
   if (!hoja) {
     hoja = SpreadsheetApp.openById(SPREADSHEET_ID).getSheets()[0];
@@ -165,11 +239,9 @@ function actualizarFila(datos) {
   }
   
   // Seleccionar la hoja según el tipo de visita
-  // Convertir a string para comparación segura (por si llega como número)
-  var tipoVisitaStr = String(datos.tipoVisita).trim();
-  Logger.log('tipoVisitaStr para comparar: "' + tipoVisitaStr + '"');
-  var nombreHojaDestino = (tipoVisitaStr === '2') ? NOMBRE_HOJA_2 : NOMBRE_HOJA_1;
+  var nombreHojaDestino = obtenerNombreHoja(datos.tipoVisita);
   Logger.log('Hoja destino seleccionada: ' + nombreHojaDestino);
+  var mapeo = obtenerMapeoColumnas(nombreHojaDestino);
   var hoja = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(nombreHojaDestino);
   
   if (!hoja) {
@@ -192,103 +264,35 @@ function actualizarFila(datos) {
   if (filaEncontrada === -1) {
     return { exito: false, mensaje: 'No se encontró el código de punto: ' + datos.codigo };
   }
-  
-  // Actualizar cada campo en la fila encontrada
-  // Columna E (5) - Cant. Equipos
-  if (datos.cantEquipos !== undefined && datos.cantEquipos !== '') {
-    hoja.getRange(filaEncontrada, 5).setValue(datos.cantEquipos);
+
+  // Caso especial: en Hoja1 (estructura antigua) las versiones Tray-Icon y
+  // WebSocket se guardan juntas en UNA sola columna "versionEquipo".
+  // En Hoja2 cada una tiene su propia columna, y el mapeo ya las contempla.
+  if (mapeo.versionEquipo) {
+    var partesVersion = [];
+    if (datos.versionTrayicon) partesVersion.push(datos.versionTrayicon);
+    if (datos.versionWebSocket) partesVersion.push(datos.versionWebSocket);
+    if (partesVersion.length > 0) {
+      hoja.getRange(filaEncontrada, mapeo.versionEquipo).setValue(partesVersion.join(' / '));
+    }
   }
-  
-  // Columna F (6) - Actualización
-  if (datos.actualizacion !== undefined && datos.actualizacion !== '') {
-    hoja.getRange(filaEncontrada, 6).setValue(datos.actualizacion);
+
+  // Escribir el resto de los campos segun el mapeo de columnas de la hoja
+  for (var campo in mapeo) {
+    if (campo === 'versionEquipo' || campo === 'codigoPunto' || campo === 'nombrePunto' || campo === 'categoria') {
+      continue; // ya manejado arriba, o son campos de solo lectura
+    }
+    if (datos[campo] !== undefined && datos[campo] !== '') {
+      hoja.getRange(filaEncontrada, mapeo[campo]).setValue(datos[campo]);
+    }
   }
-  
-  // Columna G (7) - Versión Equipo
-  if (datos.versionEquipo !== undefined && datos.versionEquipo !== '') {
-    hoja.getRange(filaEncontrada, 7).setValue(datos.versionEquipo);
-  }
-  
-  // Columna H (8) - Cámaras
-  if (datos.camaras !== undefined && datos.camaras !== '') {
-    hoja.getRange(filaEncontrada, 8).setValue(datos.camaras);
-  }
-  
-  // Columna I (9) - Cantidad de cámaras
-  if (datos.cantCamaras !== undefined && datos.cantCamaras !== '') {
-    hoja.getRange(filaEncontrada, 9).setValue(datos.cantCamaras);
-  }
-  
-  // Columna J (10) - Alarmas
-  if (datos.alarmas !== undefined && datos.alarmas !== '') {
-    hoja.getRange(filaEncontrada, 10).setValue(datos.alarmas);
-  }
-  
-  // Columna K (11) - Serial Control
-  if (datos.serialControl !== undefined && datos.serialControl !== '') {
-    hoja.getRange(filaEncontrada, 11).setValue(datos.serialControl);
-  }
-  
-  // Columna L (12) - Visita 1 Semestre
+
+  // Registrar visita en la hoja de mantenimiento interno
   if (datos.visita1 !== undefined && datos.visita1 !== '') {
-    hoja.getRange(filaEncontrada, 12).setValue(datos.visita1);
     actualizarMantenimientoInterno(datos.codigo, datos.visita1);
   }
-  
-  // Columna M (13) - Visita 2 Semestre
   if (datos.visita2 !== undefined && datos.visita2 !== '') {
-    hoja.getRange(filaEncontrada, 13).setValue(datos.visita2);
     actualizarMantenimientoInterno(datos.codigo, datos.visita2);
-  }
-  
-  // Columna N (14) - Observaciones
-  if (datos.observaciones !== undefined && datos.observaciones !== '') {
-    hoja.getRange(filaEncontrada, 14).setValue(datos.observaciones);
-  }
-  
-  // Columna O (15) - Hora Sincronizada
-  if (datos.horaSincronizada !== undefined && datos.horaSincronizada !== '') {
-    hoja.getRange(filaEncontrada, 15).setValue(datos.horaSincronizada);
-  }
-  
-  // Columna P (16) - Días de grabación
-  if (datos.diasGrabacion !== undefined && datos.diasGrabacion !== '') {
-    hoja.getRange(filaEncontrada, 16).setValue(datos.diasGrabacion);
-  }
-  
-  // Columna Q (17) - Num # Línea
-  if (datos.numLinea !== undefined && datos.numLinea !== '') {
-    hoja.getRange(filaEncontrada, 17).setValue(datos.numLinea);
-  }
-  
-  // Columna R (18) - ICCID
-  if (datos.iccid !== undefined && datos.iccid !== '') {
-    hoja.getRange(filaEncontrada, 18).setValue(datos.iccid);
-  }
-  
-  // Columna S (19) - Estado
-  if (datos.estado !== undefined && datos.estado !== '') {
-    hoja.getRange(filaEncontrada, 19).setValue(datos.estado);
-  }
-  
-  // Columna T (20) - DIRECTV
-  if (datos.directv !== undefined && datos.directv !== '') {
-    hoja.getRange(filaEncontrada, 20).setValue(datos.directv);
-  }
-  
-  // Columna U (21) - Cant. Deco
-  if (datos.cantDeco !== undefined && datos.cantDeco !== '') {
-    hoja.getRange(filaEncontrada, 21).setValue(datos.cantDeco);
-  }
-  
-  // Columna V (22) - Serial Deco
-  if (datos.serialDeco !== undefined && datos.serialDeco !== '') {
-    hoja.getRange(filaEncontrada, 22).setValue(datos.serialDeco);
-  }
-  
-  // Columna W (23) - Serial Tarjeta
-  if (datos.serialTarjeta !== undefined && datos.serialTarjeta !== '') {
-    hoja.getRange(filaEncontrada, 23).setValue(datos.serialTarjeta);
   }
   
   return {
